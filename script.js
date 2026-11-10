@@ -283,17 +283,23 @@ function handleKey(key) {
 function submitGuess() {
   if (currentCol !== COLS) {
     showMessage('Not enough letters');
+    currentCol = 0;
+    currentGuess = '';
     return;
   }
   const guess = currentGuess.toUpperCase();
   if (guess.length !== COLS) {
     showMessage('Not enough letters');
+    currentCol = 0;
+    currentGuess = '';
     return;
   }
   const gb = firstUnlockedBoard();
   if (gb === -1) { gameOver = true; return; }
   if (!VALID_GUESSES.has(guess.toLowerCase())) {
     showMessage('Not in word list');
+    currentCol = 0;
+    currentGuess = '';
     return;
   }
   // Score per word (data only)
