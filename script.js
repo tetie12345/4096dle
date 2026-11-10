@@ -536,9 +536,21 @@ document.getElementById('minimapToggle').addEventListener('click', () => {
 });
 
 let _scrollTimer = null;
+let _lastScrollY = -1;
+let _stillTimer = null;
+let _isStill = false;
 window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  if (y === _lastScrollY) return; // no actual change
+  _lastScrollY = y;
+  _isStill = false;
+  if (_stillTimer) clearTimeout(_stillTimer);
+  _stillTimer = setTimeout(() => { _isStill = true; }, 2000);
   if (_scrollTimer) return;
-  _scrollTimer = setTimeout(() => { _scrollTimer = null; updateVisibleBoards(); }, 200);
+  _scrollTimer = setTimeout(() => {
+    _scrollTimer = null;
+    if (!_isStill) updateVisibleBoards();
+  }, 500);
 }, true);
 
 document.addEventListener('keydown', e => {
