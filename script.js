@@ -29,11 +29,18 @@ function pickAnswers() {
   const pool = [...ANSWERS];
   answers = [];
   const used = new Set();
-  while (answers.length < numWords) {
-    const w = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
-    if (used.has(w)) continue;
-    used.add(w);
-    answers.push(w);
+  if (numWords <= pool.length) {
+    while (answers.length < numWords) {
+      const w = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
+      if (used.has(w)) continue;
+      used.add(w);
+      answers.push(w);
+    }
+  } else {
+    // allow repeats for very large boards
+    for (let i = 0; i < numWords; i++) {
+      answers.push(pool[Math.floor(Math.random() * pool.length)].toUpperCase());
+    }
   }
   locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
@@ -61,23 +68,33 @@ function ensureRows(w, upTo) {
 }
 
 function initBoard() {
-  boardEl.innerHTML = '';
+  const initialRows = Math.min(ROWS - 1, 5);
+  let html = '';
+  for (let w = 0; w < numWords; w++) {
+    html += '<div class="word-board" data-w="' + w + '"><div class="board-label">' + (w + 1) + '</div><div class="board-grid">';
+    for (let r = 0; r <= initialRows; r++) {
+      html += '<div class="row">';
+      for (let c = 0; c < COLS; c++) html += '<div class="tile"></div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+  boardEl.innerHTML = html;
   board = [];
   boardEls = [];
+  const boards = boardEl.children;
   for (let w = 0; w < numWords; w++) {
-    const wb = document.createElement('div');
-    wb.className = 'word-board';
-    const label = document.createElement('div');
-    label.className = 'board-label';
-    label.textContent = (w + 1);
-    wb.appendChild(label);
-    const grid = document.createElement('div');
-    grid.className = 'board-grid';
-    wb.appendChild(grid);
-    boardEl.appendChild(wb);
-    board.push([]);
+    const wb = boards[w];
     boardEls.push(wb);
-    ensureRows(w, Math.min(ROWS - 1, 5));
+    const grid = wb.children[1];
+    const rows = [];
+    for (let i = 0; i < grid.children.length; i++) {
+      const rowEl = grid.children[i];
+      const tiles = [];
+      for (let j = 0; j < rowEl.children.length; j++) tiles.push(rowEl.children[j]);
+      rows.push(tiles);
+    }
+    board.push(rows);
     wb.addEventListener('click', () => selectWord(w));
   }
   updateRowVisibility();
@@ -248,7 +265,7 @@ function scoreGuess(guess, answer) {
   return res;
 }
 
-function renderMinimap() {
+function buildMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
   const cols = Math.ceil(Math.sqrt(numWords));
@@ -257,6 +274,19 @@ function renderMinimap() {
   for (let w = 0; w < numWords; w++) {
     const sq = document.createElement('div');
     sq.className = 'minimap-sq';
+    sq.title = 'Board ' + (w + 1);
+    sq.addEventListener('click', () => selectWord(w));
+    mm.appendChild(sq);
+  }
+}
+function renderMinimap() {
+  const mm = document.getElementById('minimap');
+  if (!mm) return;
+  const sqs = mm.children;
+  if (!sqs.length) return;
+  for (let w = 0; w < numWords; w++) {
+    const sq = sqs[w];
+    sq.classList.remove('solved', 'solvable', 'selected');
     if (locked[w]) sq.classList.add('solved');
     else {
       const distinct = new Set(answers[w].split(''));
@@ -265,9 +295,6 @@ function renderMinimap() {
       if (solvable) sq.classList.add('solvable');
     }
     if (w === selectedWord) sq.classList.add('selected');
-    sq.title = 'Board ' + (w + 1);
-    sq.addEventListener('click', () => selectWord(w));
-    mm.appendChild(sq);
   }
 }
 function selectWord(w) {
@@ -327,6 +354,7 @@ function newGame() {
     k.classList.remove('correct','present','absent');
     delete k.dataset.state;
   });
+  buildMinimap();
   selectWord(0);
   updateStatus(false);
   renderMinimap();
@@ -341,10 +369,10 @@ function showMenu() {
 }
 
 function startMode(n) {
-  n = Math.max(1, Math.min(256, parseInt(n) || 1));
+  n = Math.max(1, Math.min(4096, parseInt(n) || 1));
   numWords = n;
   ROWS = n + 5;
-  const size = n <= 4 ? 46 : (n <= 16 ? 34 : 24);
+  const size = n <= 4 ? 46 : (n <= 16 ? 34 : (n <= 64 ? 24 : (n <= 256 ? 18 : 12)));
   document.documentElement.style.setProperty('--tile-size', size + 'px');
   document.documentElement.style.setProperty('--rows', ROWS);
   modeSelect.classList.add('hidden');
