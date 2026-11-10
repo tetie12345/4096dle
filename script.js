@@ -1,6 +1,8 @@
 const COLS = 5;
 let ROWS = 6;
 let numWords = 1;
+let selectedWord = 0;
+let keyStates = []; // keyStates[w] = { letter: state }
 let answers = [];
 let currentRow = 0;
 let currentCol = 0;
@@ -32,6 +34,8 @@ function pickAnswers() {
     answers.push(w);
   }
   solved = answers.map(() => false);
+  keyStates = answers.map(() => ({}));
+  selectedWord = 0;
 }
 
 function initBoard() {
@@ -56,6 +60,8 @@ function initBoard() {
     }
     boardEl.appendChild(wb);
     board.push(rows);
+    // selection
+    wb.addEventListener('click', () => selectWord(w));
   }
 }
 
@@ -115,7 +121,6 @@ function submitGuess() {
     return;
   }
   // Score per word
-  const bestKeyState = {};
   for (let w = 0; w < numWords; w++) {
     if (solved[w]) {
       for (let c = 0; c < COLS; c++) {
@@ -124,6 +129,7 @@ function submitGuess() {
       continue;
     }
     const result = scoreGuess(guess, answers[w]);
+    const bestKeyState = {};
     for (let c = 0; c < COLS; c++) {
       board[w][currentRow][c].classList.add(result[c]);
       const letter = guess[c];
@@ -133,14 +139,21 @@ function submitGuess() {
         bestKeyState[letter] = result[c];
       }
     }
+    // merge into keyStates[w]
+    const ks = keyStates[w];
+    for (const letter in bestKeyState) {
+      const priority = { correct: 3, present: 2, absent: 1 };
+      const cur = ks[letter];
+      if (!cur || (priority[bestKeyState[letter]] || 0) > (priority[cur] || 0)) {
+        ks[letter] = bestKeyState[letter];
+      }
+    }
     if (guess === answers[w]) {
       solved[w] = true;
     }
   }
+  renderKeyboard();
   const allSolved = solved.every(Boolean);
-  for (const letter in bestKeyState) {
-    updateKeyColor(letter, bestKeyState[letter]);
-  }
   if (allSolved) {
     subtitleEl.textContent = 'Solved! Answers: ' + answers.join(', ');
     showMessage('You win! Answers: ' + answers.join(', '));
@@ -199,6 +212,27 @@ function showMessage(msg) {
   }
 }
 
+function selectWord(w) {
+  selectedWord = w;
+  document.querySelectorAll('.word-board').forEach((wb, idx) => {
+    wb.classList.toggle('selected', idx === w);
+  });
+  renderKeyboard();
+}
+
+function renderKeyboard() {
+  const ks = keyStates[selectedWord] || {};
+  keyboardEl.querySelectorAll('.key').forEach(btn => {
+    const letter = btn.dataset.key;
+    btn.classList.remove('correct','present','absent');
+    if (ks[letter]) {
+      btn.classList.add(ks[letter]);
+      btn.dataset.state = ks[letter];
+    } else {
+      delete btn.dataset.state;
+    }
+  });
+}
 function newGame() {
   pickAnswers();
   currentRow = 0;
@@ -211,6 +245,7 @@ function newGame() {
     k.classList.remove('correct','present','absent');
     delete k.dataset.state;
   });
+  selectWord(0);
   subtitleEl.textContent = numWords === 1
     ? 'Guess the word in 6 tries'
     : `Guess ${numWords} words at once in 6 tries`;
@@ -235,6 +270,17 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 
 document.getElementById('newGame').addEventListener('click', newGame);
 document.getElementById('menuBtn').addEventListener('click', showMenu);
+document.getElementById('toggleKb').addEventListener('click', () => {
+  const kb = document.getElementById('keyboard');
+  const btn = document.getElementById('toggleKb');
+  if (kb.style.display === 'none') {
+    kb.style.display = '';
+    btn.textContent = 'Hide KB';
+  } else {
+    kb.style.display = 'none';
+    btn.textContent = 'Show KB';
+  }
+});
 
 document.addEventListener('keydown', e => {
   if (modeSelect && !modeSelect.classList.contains('hidden')) return;

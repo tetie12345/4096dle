@@ -28,8 +28,11 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .word-board {
   display: grid; grid-template-rows: repeat(6, 1fr); gap: 4px;
-  padding: 8px; border: 1px solid #3a3a3c; border-radius: 6px;
+  padding: 8px; border: 2px solid #3a3a3c; border-radius: 6px;
+  cursor: pointer;
 }
+.word-board.selected { border-color: #6aaa64; box-shadow: 0 0 8px #6aaa64; }
+.word-board:hover { border-color: #565758; }
 .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .tile {
   width: 46px; height: 46px;
@@ -56,6 +59,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .key.present { background: #b59f3b; }
 .key.absent { background: #3a3a3c; }
 
+.hint { color: #818384; font-size: 0.8rem; margin-bottom: 8px; }
 .message { min-height: 28px; margin: 12px 0; font-weight: 700; font-size: 1.3rem; color: #6aaa64; }
 .actions { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
 .btn { padding: 10px 20px; background: #538d4e; border: none; border-radius: 4px; color: #fff; font-weight: 700; cursor: pointer; font-size: 1rem; }
