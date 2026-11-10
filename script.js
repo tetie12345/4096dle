@@ -413,11 +413,19 @@ function selectWord(w) {
   renderKeyboard();
   renderMinimap();
   if (boardEls[w]) {
-    boardEls[w].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     if (!visibleBoards.has(w)) {
       visibleBoards.add(w);
       renderBoard(w);
     }
+    // render neighbors to stabilize layout before scrolling
+    for (let d = -2; d <= 2; d++) {
+      const idx = w + d;
+      if (idx >= 0 && idx < numWords && !visibleBoards.has(idx)) {
+        visibleBoards.add(idx);
+        renderBoard(idx);
+      }
+    }
+    boardEls[w].scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
     setTimeout(updateVisibleBoards, 250);
   }
 }
