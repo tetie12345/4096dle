@@ -14,6 +14,7 @@ let boardEls = []; // boardEls[w] = word-board container element
 let currentGuess = ''; // in-progress guess string
 let guesses = []; // global guess history (same for all boards)
 let visibleBoards = new Set(); // set of board indices currently in viewport
+let minimapState = []; // cached state per board for minimap diffing
 let boardObserver = null;
 
 const boardEl = document.getElementById('board');
@@ -86,11 +87,11 @@ function initBoard() {
   const boards = boardEl.children;
   for (let w = 0; w < numWords; w++) {
     const wb = boards[w];
-    boardEls.push(wb);
-    board.push([]);
+    boardEls[w] = wb;
+    board[w] = [];
     wb.addEventListener('click', () => selectWord(w));
-    if (boardObserver) boardObserver.observe(wb);
   }
+  setTimeout(updateVisibleBoards, 50);
 }
 
 function renderBoard(w) {
@@ -160,11 +161,12 @@ function updateRowVisibilityOne(w) {
 function updateVisibleBoards() {
   if (!boardEls.length) return;
   const vh = window.innerHeight;
-  const margin = 300;
+  const margin = 150;
   for (let w = 0; w < numWords; w++) {
     const wb = boardEls[w];
     if (!wb) continue;
     const rect = wb.getBoundingClientRect();
+    if (rect.top > vh + margin) break; // rest are below viewport
     const inView = rect.bottom > -margin && rect.top < vh + margin;
     if (inView) {
       if (!visibleBoards.has(w)) {
@@ -172,9 +174,12 @@ function updateVisibleBoards() {
         renderBoard(w);
       }
     } else {
-      if (visibleBoards.has(w) && w !== selectedWord) {
-        visibleBoards.delete(w);
-        clearBoard(w);
+      if (rect.bottom < -margin) {
+        // above viewport
+        if (visibleBoards.has(w) && w !== selectedWord) {
+          visibleBoards.delete(w);
+          clearBoard(w);
+        }
       }
     }
   }
@@ -295,6 +300,13 @@ function submitGuess() {
         foundLetters[w].add(guess[c]);
       }
     }
+    // update DOM tiles for visible boards (in place, no full rebuild)
+    if (board[w] && board[w][currentRow]) {
+      for (let c = 0; c < COLS; c++) {
+        const tile = board[w][currentRow][c];
+        if (tile) tile.classList.add(result[c]);
+      }
+    }
     if (guess === answers[w]) {
       locked[w] = true;
       if (boardEls[w]) boardEls[w].classList.add('locked');
@@ -302,9 +314,9 @@ function submitGuess() {
   }
   guesses.push(guess);
   currentGuess = '';
-  // Re-render visible boards
+  // Ensure next row exists for visible boards
   for (const w of visibleBoards) {
-    renderBoard(w);
+    if (!locked[w]) ensureRows(w, currentRow + 1);
   }
   renderKeyboard();
   renderMinimap();
@@ -367,19 +379,28 @@ function buildMinimap() {
 function renderMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
+  if (mm.classList.contains('collapsed')) return;
   const sqs = mm.children;
   if (!sqs.length) return;
   for (let w = 0; w < numWords; w++) {
     const sq = sqs[w];
-    sq.classList.remove('solved', 'solvable', 'selected');
-    if (locked[w]) sq.classList.add('solved');
-    else {
+    if (!sq) continue;
+    const prev = minimapState[w];
+    let state = locked[w] ? 'solved' : '';
+    if (!locked[w]) {
       const distinct = new Set(answers[w].split(''));
       let solvable = true;
       for (const l of distinct) { if (!foundLetters[w].has(l)) { solvable = false; break; } }
-      if (solvable) sq.classList.add('solvable');
+      if (solvable) state = 'solvable';
     }
-    if (w === selectedWord) sq.classList.add('selected');
+    const sel = (w === selectedWord) ? '1' : '0';
+    const key = state + '|' + sel;
+    if (key === prev) continue;
+    minimapState[w] = key;
+    sq.classList.remove('solved', 'solvable', 'selected');
+    if (state === 'solved') sq.classList.add('solved');
+    else if (state === 'solvable') sq.classList.add('solvable');
+    if (sel === '1') sq.classList.add('selected');
   }
 }
 function selectWord(w) {
@@ -439,9 +460,8 @@ function newGame() {
   messageEl.textContent = '';
   boardEl.innerHTML = '';
   visibleBoards = new Set();
+  minimapState = [];
   initBoard();
-  // render initially visible boards
-  setTimeout(updateVisibleBoards, 100);
   initKeyboard();
   keyboardEl.querySelectorAll('.key').forEach(k => {
     k.classList.remove('correct','present','absent');
@@ -508,6 +528,7 @@ document.getElementById('minimapToggle').addEventListener('click', () => {
   if (mm.classList.contains('collapsed')) {
     mm.classList.remove('collapsed');
     btn.textContent = 'Hide Map';
+    renderMinimap();
   } else {
     mm.classList.add('collapsed');
     btn.textContent = 'Map';
@@ -517,7 +538,7 @@ document.getElementById('minimapToggle').addEventListener('click', () => {
 let _scrollTimer = null;
 window.addEventListener('scroll', () => {
   if (_scrollTimer) return;
-  _scrollTimer = setTimeout(() => { _scrollTimer = null; updateVisibleBoards(); }, 120);
+  _scrollTimer = setTimeout(() => { _scrollTimer = null; updateVisibleBoards(); }, 200);
 }, true);
 
 document.addEventListener('keydown', e => {
