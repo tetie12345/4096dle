@@ -180,7 +180,7 @@ function updateRowVisibilityOne(w) {
 function updateVisibleBoards() {
   if (!boardEls.length) return;
   const vh = window.innerHeight;
-  const margin = 150;
+  const margin = 600;
   for (let w = 0; w < numWords; w++) {
     const wb = boardEls[w];
     if (!wb) continue;
@@ -570,6 +570,7 @@ function startMode(n) {
   modeSelect.classList.add('hidden');
   gameEl.classList.remove('hidden');
   newGame();
+  setTimeout(() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; }, 100);
 }
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
