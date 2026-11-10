@@ -400,22 +400,15 @@ function renderMinimap() {
   for (let w = 0; w < numWords; w++) {
     const sq = sqs[w];
     if (!sq) continue;
-    const prev = minimapState[w];
-    let state = locked[w] ? 'solved' : '';
-    if (!locked[w]) {
+    sq.classList.remove('solved', 'solvable', 'selected');
+    if (locked[w]) sq.classList.add('solved');
+    else {
       const distinct = new Set(answers[w].split(''));
       let solvable = true;
       for (const l of distinct) { if (!foundLetters[w].has(l)) { solvable = false; break; } }
-      if (solvable) state = 'solvable';
+      if (solvable) sq.classList.add('solvable');
     }
-    const sel = (w === selectedWord) ? '1' : '0';
-    const key = state + '|' + sel;
-    if (key === prev) continue;
-    minimapState[w] = key;
-    sq.classList.remove('solved', 'solvable', 'selected');
-    if (state === 'solved') sq.classList.add('solved');
-    else if (state === 'solvable') sq.classList.add('solvable');
-    if (sel === '1') sq.classList.add('selected');
+    if (w === selectedWord) sq.classList.add('selected');
   }
 }
 function selectWord(w) {
