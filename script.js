@@ -156,7 +156,7 @@ function clearBoard(w) {
 
 function updateBoardMinHeights() {
   const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 46;
-  const rows = Math.min(ROWS, (currentRow || 0) + 6);
+  const rows = Math.min(ROWS, 11);
   const h = rows * (tileSize + 4) + 40;
   const w = 5 * tileSize + 4 * 4 + 16 + 4;
   for (let w2 = 0; w2 < numWords; w2++) {
@@ -337,6 +337,7 @@ function submitGuess() {
   for (const w of visibleBoards) {
     if (!locked[w]) ensureRows(w, currentRow + 1);
   }
+  updateRowVisibility();
   renderKeyboard();
   renderMinimap();
   const allLocked = locked.every(Boolean);
@@ -351,6 +352,7 @@ function submitGuess() {
   currentCol = 0;
   updateStatus(false);
   updateBoardMinHeights();
+  updateVisibleBoards();
   if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
     showMessage('Game over. Answers: ' + answers.join(', '));
