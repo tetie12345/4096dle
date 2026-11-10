@@ -355,6 +355,13 @@ function newGame() {
     delete k.dataset.state;
   });
   buildMinimap();
+  if (numWords > 64) {
+    document.getElementById('minimap').classList.add('collapsed');
+    document.getElementById('minimapToggle').textContent = 'Map';
+  } else {
+    document.getElementById('minimap').classList.remove('collapsed');
+    document.getElementById('minimapToggle').textContent = 'Hide Map';
+  }
   selectWord(0);
   updateStatus(false);
   renderMinimap();
@@ -398,6 +405,17 @@ document.getElementById('toggleKb').addEventListener('click', () => {
   } else {
     kb.classList.add('hidden-kb');
     btn.textContent = 'Show KB';
+  }
+});
+document.getElementById('minimapToggle').addEventListener('click', () => {
+  const mm = document.getElementById('minimap');
+  const btn = document.getElementById('minimapToggle');
+  if (mm.classList.contains('collapsed')) {
+    mm.classList.remove('collapsed');
+    btn.textContent = 'Hide Map';
+  } else {
+    mm.classList.add('collapsed');
+    btn.textContent = 'Map';
   }
 });
 
