@@ -56,8 +56,9 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .minimap.collapsed { display: none; }
 .minimap.hidden { display: none; }
-.minimap.old .minimap-sq { width: 10px; height: 10px; border-radius: 2px; background: #3a3a3c; }
-.minimap.new .minimap-sq { width: 24px; height: 24px; border-radius: 4px; background: #3a3a3c; }
+.minimap.old .minimap-sq { width: 10px; height: 10px; border-radius: 2px; }
+.minimap.new .minimap-sq { width: 24px; height: 24px; border-radius: 4px; }
+.minimap-sq { background: #3a3a3c; }
 .minimap-sq.solved { background: #538d4e; }
 .minimap-sq.solvable { background: #b59f3b; }
 .minimap-sq.selected { outline: 1px solid #fff; }
