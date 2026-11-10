@@ -140,46 +140,55 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .actions { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
 /* Mobile responsiveness */
 @media (max-width: 600px) {
-  .container { padding: 0 8px 70px 8px; max-width: 100%; }
-  header h1 { font-size: 1.6rem; letter-spacing: 0.15rem; }
-  .subtitle { font-size: 0.8rem; }
-  .github-link a { font-size: 0.8rem; padding: 4px 8px; }
-  .github-text { font-size: 0.8rem; }
+  .container { padding: 12px 8px 80px 8px; }
+  header h1 { font-size: 1.4rem; letter-spacing: 0.12rem; }
+  .subtitle { font-size: 0.75rem; margin-bottom: 6px; }
+  .github-link { margin-bottom: 10px; }
+  .github-link a { font-size: 0.72rem; padding: 3px 6px; }
 
-  .mode-select { margin-top: 30px; }
-  .mode-select h2 { font-size: 1.1rem; margin-bottom: 12px; }
-  .mode-presets { gap: 6px; }
-  .mode-btn { padding: 10px 16px; font-size: 0.9rem; }
-  .mode-custom input { width: 60px; padding: 8px; font-size: 0.9rem; }
-  .mode-hint { font-size: 0.75rem; }
+  .mode-select { margin-top: 20px; }
+  .mode-select h2 { font-size: 0.95rem; margin-bottom: 8px; }
+  .mode-presets { gap: 4px; margin-bottom: 8px; }
+  .mode-btn { padding: 6px 12px; font-size: 0.8rem; }
+  .mode-custom { margin-bottom: 6px; }
+  .mode-custom input { width: 48px; padding: 5px; font-size: 0.8rem; }
+  .mode-hint { font-size: 0.65rem; }
 
-  :root { --tile-size: 34px !important; }
+  :root { --tile-size: 30px !important; }
 
-  .word-board { min-width: calc(5 * var(--tile-size, 34px) + 24px); padding: 4px; }
-  .tile { font-size: calc(var(--tile-size, 34px) * 0.5); }
+  .word-board { min-width: calc(5 * var(--tile-size, 30px) + 24px); padding: 3px; }
+  .tile { font-size: calc(var(--tile-size, 30px) * 0.45); }
 
-  .keyboard { padding: 4px; gap: 3px; left: 50%; bottom: 8px; }
-  .kb-row { gap: 2px; }
-  .key { min-width: 24px; height: 28px; font-size: 0.8rem; }
-  .key.wide { min-width: 36px; font-size: 0.6rem; }
+  .keyboard { padding: 2px; gap: 2px; left: 50%; bottom: calc(8px + 20px); }
+  .kb-row { gap: 1px; }
+  .key { min-width: 18px; height: 22px; font-size: 0.65rem; }
+  .key.wide { min-width: 24px; font-size: 0.55rem; }
 
-  .status { margin-bottom: 110px; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
-  .status span { padding: 3px 6px; }
+  .status { margin-bottom: 90px; gap: 4px; font-size: 0.7rem; flex-wrap: wrap; }
+  .status span { padding: 2px 5px; }
 
-  .games-left { position: fixed; bottom: 72px; right: 8px; font-size: 0.78rem; padding: 5px 10px; flex-direction: column; gap: 4px; }
+  .games-left { position: fixed; bottom: 85px; right: 4px; font-size: 0.68rem; padding: 4px 8px; flex-direction: column; gap: 3px; z-index: 100; }
 
-  .board-label-float { position: fixed; bottom: 100px; right: 6px; font-size: 0.75rem; padding: 3px 8px; }
+  .board-label-float { position: fixed; bottom: 85px; right: 4px; font-size: 0.65rem; padding: 2px 6px; z-index: 101; }
 
-  .minimap-toggle { position: fixed; bottom: 100px; left: 8px; font-size: 0.7rem; padding: 3px 8px; }
+  .minimap-toggle { position: fixed; bottom: 85px; left: 4px; font-size: 0.65rem; padding: 2px 6px; z-index: 102; }
 
-  .hint { font-size: 0.7rem; }
-  .message { font-size: 0.9rem; padding: 8px 14px; width: 90%; text-align: center; }
-  .actions { gap: 6px; }
-  .btn { padding: 8px 14px; font-size: 0.85rem; }
+  .hint { font-size: 0.62rem; }
 
-  .minimap.old { max-width: 180px; bottom: 30px; left: 4px; }
-  .minimap.new { top: 2vh; left: 2vw; max-width: 96vw; max-height: 72vh; }
-  .minimap.new .minimap-sq { width: 18px; height: 18px; }
+  .message { font-size: 0.8rem; padding: 6px 10px; }
+
+  .actions { gap: 4px; }
+  .btn { padding: 5px 10px; font-size: 0.75rem; }
+
+  .minimap.old { max-width: 140px; bottom: 20px; left: 2px; }
+  .minimap.new { top: 1vh; left: 1vw; max-width: 96vw; max-height: 70vh; }
+  .minimap.new .minimap-sq { width: 14px; height: 14px; }
+
+  .board { gap: 6px; }
+  .game { padding: 4px; }
+  .game .word-board { gap: 2px; }
+  .game.selected { box-shadow: 0 0 6px #6aaa64; }
+  .game:hover { border-color: #565758; }
 }
 
 @media (max-width: 400px) {
