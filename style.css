@@ -43,12 +43,13 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
   position: sticky; top: 0; background: #121213; z-index: 2; padding: 2px 0;
 }
 .minimap {
-  position: fixed; bottom: 44px; left: 10px; z-index: 101;
-  display: grid; gap: 2px; padding: 6px; background: #2a2a2c; border-radius: 6px;
-  max-width: 200px; max-height: 200px; overflow: auto;
+  position: fixed; top: 5vh; left: 5vw; z-index: 101;
+  display: grid; gap: 3px; padding: 10px; background: #2a2a2c; border-radius: 8px;
+  max-width: 90vw; max-height: 90vh; overflow: auto;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
 }
 .minimap-sq {
-  width: 12px; height: 12px; border-radius: 2px; background: #3a3a3c;
+  width: 18px; height: 18px; border-radius: 3px; background: #3a3a3c;
 }
 .minimap-sq.solved { background: #538d4e; }
 .minimap-sq.solvable { background: #b59f3b; }

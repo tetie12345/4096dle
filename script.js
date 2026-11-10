@@ -268,8 +268,10 @@ function scoreGuess(guess, answer) {
 function buildMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
-  const cols = Math.ceil(Math.sqrt(numWords));
-  mm.style.gridTemplateColumns = `repeat(${cols}, 10px)`;
+  const sqSize = 18, gap = 3;
+  const availW = Math.floor(window.innerWidth * 0.9);
+  const cols = Math.max(1, Math.min(numWords, Math.floor(availW / (sqSize + gap))));
+  mm.style.gridTemplateColumns = `repeat(${cols}, 18px)`;
   mm.innerHTML = '';
   for (let w = 0; w < numWords; w++) {
     const sq = document.createElement('div');
