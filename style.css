@@ -40,6 +40,12 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .board-label {
   font-size: 0.75rem; color: #818384; text-align: center; font-weight: 700;
+  position: sticky; top: 0; background: #121213; z-index: 2; padding: 2px 0;
+}
+.board-label-float {
+  position: fixed; bottom: 10px; right: 10px; z-index: 101;
+  background: #2a2a2c; color: #d7dadc; padding: 6px 12px; border-radius: 6px;
+  font-size: 0.9rem; font-weight: 700;
 }
 .word-board.locked { opacity: 0.6; pointer-events: none; border-color: #538d4e; }
 .word-board.selected { border-color: #6aaa64; box-shadow: 0 0 8px #6aaa64; }

@@ -244,6 +244,8 @@ function selectWord(w) {
   document.querySelectorAll('.word-board').forEach((wb, idx) => {
     wb.classList.toggle('selected', idx === w);
   });
+  const fl = document.getElementById('boardLabelFloat');
+  if (fl) fl.textContent = 'Board ' + (w + 1);
   renderKeyboard();
 }
 
@@ -305,7 +307,7 @@ function showMenu() {
 function startMode(n) {
   n = Math.max(1, Math.min(256, parseInt(n) || 1));
   numWords = n;
-  ROWS = Math.min(200, n + 5);
+  ROWS = n + 5;
   const size = n <= 4 ? 46 : (n <= 16 ? 34 : 24);
   document.documentElement.style.setProperty('--tile-size', size + 'px');
   document.documentElement.style.setProperty('--rows', ROWS);
