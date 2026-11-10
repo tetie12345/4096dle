@@ -138,5 +138,56 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .message.show { opacity: 1; }
 .actions { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .container { padding: 0 8px 120px 8px; max-width: 100%; }
+  header h1 { font-size: 1.6rem; letter-spacing: 0.15rem; }
+  .subtitle { font-size: 0.8rem; }
+  .github-link a { font-size: 0.8rem; padding: 4px 8px; }
+  .github-text { font-size: 0.8rem; }
+
+  .mode-select { margin-top: 30px; }
+  .mode-select h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  .mode-presets { gap: 6px; }
+  .mode-btn { padding: 10px 16px; font-size: 0.9rem; }
+  .mode-custom input { width: 60px; padding: 8px; font-size: 0.9rem; }
+  .mode-hint { font-size: 0.75rem; }
+
+  /* Smaller tile sizes on mobile */
+  :root { --tile-size: 34px !important; }
+
+  .word-board { min-width: calc(5 * var(--tile-size, 34px) + 24px); padding: 4px; }
+  .tile { font-size: calc(var(--tile-size, 34px) * 0.5); }
+
+  .keyboard { padding: 4px; gap: 4px; left: 50%; bottom: 4px; }
+  .kb-row { gap: 3px; }
+  .key { min-width: 26px; height: 38px; font-size: 0.85rem; }
+  .key.wide { min-width: 40px; font-size: 0.7rem; }
+
+  .status { gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
+  .status span { padding: 3px 6px; }
+
+  .games-left { bottom: 60px; right: 4px; font-size: 0.75rem; padding: 3px 8px; gap: 6px; }
+  .board-label-float { bottom: 4px; right: 4px; font-size: 0.75rem; padding: 4px 8px; }
+
+  .hint { font-size: 0.7rem; }
+  .message { font-size: 0.9rem; padding: 8px 14px; width: 90%; text-align: center; }
+  .actions { gap: 6px; }
+  .btn { padding: 8px 14px; font-size: 0.85rem; }
+
+  .minimap-toggle { bottom: 4px; left: 4px; font-size: 0.7rem; padding: 3px 6px; }
+  .minimap.old { max-width: 180px; bottom: 30px; left: 4px; }
+  .minimap.new { top: 2vh; left: 2vw; max-width: 96vw; max-height: 80vh; }
+  .minimap.new .minimap-sq { width: 18px; height: 18px; }
+}
+
+@media (max-width: 400px) {
+  header h1 { font-size: 1.3rem; }
+  .mode-btn { padding: 8px 12px; font-size: 0.8rem; }
+  :root { --tile-size: 30px; }
+  .key { min-width: 22px; height: 34px; font-size: 0.75rem; }
+  .key.wide { min-width: 34px; font-size: 0.6rem; }
+  .games-left { font-size: 0.7rem; }
+}
 .btn { padding: 10px 20px; background: #538d4e; border: none; border-radius: 4px; color: #fff; font-weight: 700; cursor: pointer; font-size: 1rem; }
 .btn:hover { background: #6aaa64; }
