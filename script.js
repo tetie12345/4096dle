@@ -476,6 +476,8 @@ function updateStatus(justSubmitted) {
   const extra = Math.max(0, guessesLeft - unsolved);
   const statusEl = document.getElementById('status');
   statusEl.innerHTML = '<span>Unsolved: ' + unsolved + '</span><span>Guesses left: ' + guessesLeft + '</span><span class="extra">Extra: ' + extra + '</span>';
+  const gl = document.getElementById('gamesLeft');
+  if (gl) gl.textContent = 'Games left: ' + unsolved;
 }
 function showMessage(msg) {
   messageEl.textContent = msg;
