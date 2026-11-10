@@ -236,8 +236,8 @@ function initKeyboard() {
 }
 
 function extraGuesses(n) {
-  // Curve: 5 extra on 1 word, 20 extra on 4096 words; exponential (slow start, fast end)
-  return Math.round(5 * Math.pow(4, (n - 1) / 4095));
+  // Linear: 5 extra on 1 word, 20 extra on 4096 words
+  return Math.round(5 + 15 * (n - 1) / 4095);
 }
 
 function firstUnlockedBoard() {
