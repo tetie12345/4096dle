@@ -1,4 +1,5 @@
-const ROWS = 6, COLS = 5;
+const COLS = 5;
+let ROWS = 6;
 let numWords = 1;
 let answers = [];
 let currentRow = 0;
@@ -140,14 +141,16 @@ function submitGuess() {
     updateKeyColor(letter, bestKeyState[letter]);
   }
   if (allSolved) {
-    showMessage('You win! 🎉');
+    subtitleEl.textContent = 'Solved! Answers: ' + answers.join(', ');
+    showMessage('You win! Answers: ' + answers.join(', '));
     gameOver = true;
     return;
   }
   currentRow++;
   currentCol = 0;
   if (currentRow === ROWS) {
-    showMessage('Answers: ' + answers.join(', '));
+    subtitleEl.textContent = 'Answers: ' + answers.join(', ');
+    showMessage('Game over. Answers: ' + answers.join(', '));
     gameOver = true;
   }
 }
@@ -188,8 +191,8 @@ function updateKeyColor(letter, state) {
 
 function showMessage(msg) {
   messageEl.textContent = msg;
-  if (msg.startsWith('You win') || msg.startsWith('Answers')) {
-    // keep
+  if (msg.startsWith('You win') || msg.startsWith('Game over') || msg.startsWith('Answers')) {
+    // keep visible
   } else {
     setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
   }
@@ -219,6 +222,7 @@ function showMenu() {
 
 function startMode(n) {
   numWords = n;
+  ROWS = (n === 1) ? 6 : 9;
   modeSelect.classList.add('hidden');
   gameEl.classList.remove('hidden');
   newGame();
