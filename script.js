@@ -235,6 +235,11 @@ function initKeyboard() {
   });
 }
 
+function extraGuesses(n) {
+  // Curve: 5 extra on 1 word, 20 extra on 4096 words; exponential (slow start, fast end)
+  return Math.round(5 * Math.pow(4, (n - 1) / 4095));
+}
+
 function firstUnlockedBoard() {
   for (let w = 0; w < numWords; w++) {
     if (!locked[w]) return w;
@@ -571,7 +576,7 @@ function showMenu() {
 function startMode(n) {
   n = Math.max(1, Math.min(4096, parseInt(n) || 1));
   numWords = n;
-  ROWS = n + 5;
+  ROWS = n + extraGuesses(n);
   const size = n <= 4 ? 52 : (n <= 16 ? 40 : (n <= 64 ? 34 : (n <= 256 ? 28 : 20)));
   document.documentElement.style.setProperty('--tile-size', size + 'px');
   document.documentElement.style.setProperty('--rows', ROWS);
