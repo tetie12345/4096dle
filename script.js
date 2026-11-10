@@ -351,10 +351,10 @@ function scoreGuess(guess, answer) {
 function buildMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
-  const sqSize = 18, gap = 3;
+  const sqSize = 24, gap = 4;
   const availW = Math.floor(window.innerWidth * 0.9);
   const cols = Math.max(1, Math.min(numWords, Math.floor(availW / (sqSize + gap))));
-  mm.style.gridTemplateColumns = `repeat(${cols}, 18px)`;
+  mm.style.gridTemplateColumns = `repeat(${cols}, ${sqSize}px)`;
   mm.innerHTML = '';
   for (let w = 0; w < numWords; w++) {
     const sq = document.createElement('div');
