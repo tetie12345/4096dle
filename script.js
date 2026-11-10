@@ -470,7 +470,7 @@ function updateStatus(justSubmitted) {
   const statusEl = document.getElementById('status');
   statusEl.innerHTML = '<span>Unsolved: ' + unsolved + '</span><span>Guesses left: ' + guessesLeft + '</span><span class="extra">Extra: ' + extra + '</span>';
   const gl = document.getElementById('gamesLeft');
-  if (gl) gl.textContent = 'Games left: ' + unsolved;
+  if (gl) gl.innerHTML = '<span>Games: ' + unsolved + '</span><span>Guesses: ' + guessesLeft + '</span><span>Free: ' + extra + '</span>';
 }
 function showMessage(msg) {
   messageEl.textContent = msg;
@@ -563,11 +563,14 @@ document.getElementById('menuBtn').addEventListener('click', showMenu);
 document.getElementById('toggleKb').addEventListener('click', () => {
   const kb = document.getElementById('keyboard');
   const btn = document.getElementById('toggleKb');
+  const gl = document.getElementById('gamesLeft');
   if (kb.classList.contains('hidden-kb')) {
     kb.classList.remove('hidden-kb');
+    if (gl) gl.classList.remove('hidden');
     btn.textContent = 'Hide KB';
   } else {
     kb.classList.add('hidden-kb');
+    if (gl) gl.classList.add('hidden');
     btn.textContent = 'Show KB';
   }
 });

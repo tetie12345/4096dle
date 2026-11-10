@@ -68,10 +68,12 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .minimap-toggle.hidden { display: none; }
 .games-left {
-  position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: 78px; right: 10px;
   z-index: 100; background: #2a2a2c; color: #d7dadc;
   padding: 4px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 700;
+  display: flex; gap: 12px;
 }
+.games-left.hidden { display: none; }
 .board-label-float {
   position: fixed; bottom: 10px; right: 10px; z-index: 101;
   background: #2a2a2c; color: #d7dadc; padding: 6px 12px; border-radius: 6px;
