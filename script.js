@@ -156,7 +156,7 @@ function clearBoard(w) {
 
 function updateBoardMinHeights() {
   const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 46;
-  const rows = Math.min(ROWS, 11);
+  const rows = Math.min(ROWS, (currentRow || 0) + 6);
   const h = rows * (tileSize + 4) + 40;
   const w = 5 * tileSize + 4 * 4 + 16 + 4;
   for (let w2 = 0; w2 < numWords; w2++) {
@@ -292,6 +292,8 @@ function submitGuess() {
     return;
   }
   // Score per word (data only)
+  const _oldScrollY = window.scrollY;
+  const _oldHeight = document.documentElement.scrollHeight;
   for (let w = 0; w < numWords; w++) {
     if (locked[w]) continue;
     const result = scoreGuess(guess, answers[w]);
@@ -353,6 +355,12 @@ function submitGuess() {
   updateStatus(false);
   updateBoardMinHeights();
   updateVisibleBoards();
+  // Compensate scroll so the view stays at the same relative position
+  const _newHeight = document.documentElement.scrollHeight;
+  if (_oldHeight > 0 && _newHeight !== _oldHeight) {
+    const ratio = _newHeight / _oldHeight;
+    window.scrollTo(0, _oldScrollY * ratio);
+  }
   if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
     showMessage('Game over. Answers: ' + answers.join(', '));
