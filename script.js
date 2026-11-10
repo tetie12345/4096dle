@@ -31,21 +31,25 @@ const KEYBOARD_LAYOUT = [
 ];
 
 function pickAnswers() {
-  const pool = [...ANSWERS];
+  let pool;
+  if (numWords <= ANSWERS.length) {
+    pool = [...ANSWERS];
+  } else {
+    // Expand pool to all valid guesses so 4096 unique answers are possible
+    pool = [...VALID_GUESSES];
+  }
   answers = [];
   const used = new Set();
-  if (numWords <= pool.length) {
-    while (answers.length < numWords) {
-      const w = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
-      if (used.has(w)) continue;
-      used.add(w);
-      answers.push(w);
-    }
-  } else {
-    // allow repeats for very large boards
-    for (let i = 0; i < numWords; i++) {
-      answers.push(pool[Math.floor(Math.random() * pool.length)].toUpperCase());
-    }
+  // Always dedup: never allow two boards to share an answer
+  while (answers.length < numWords && used.size < pool.length) {
+    const w = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
+    if (used.has(w)) continue;
+    used.add(w);
+    answers.push(w);
+  }
+  // If pool exhausted (shouldn't happen for <=4096), pad with repeats as last resort
+  while (answers.length < numWords) {
+    answers.push(pool[Math.floor(Math.random() * pool.length)].toUpperCase());
   }
   locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
