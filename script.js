@@ -158,9 +158,13 @@ function updateBoardMinHeights() {
   const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 46;
   const rows = Math.min(ROWS, (currentRow || 0) + 6);
   const h = rows * (tileSize + 4) + 40;
-  for (let w = 0; w < numWords; w++) {
-    const wb = boardEls[w];
-    if (wb) wb.style.minHeight = h + 'px';
+  const w = 5 * tileSize + 4 * 4 + 16 + 4;
+  for (let w2 = 0; w2 < numWords; w2++) {
+    const wb = boardEls[w2];
+    if (wb) {
+      wb.style.minHeight = h + 'px';
+      wb.style.minWidth = w + 'px';
+    }
   }
 }
 

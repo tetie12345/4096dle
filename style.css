@@ -34,6 +34,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
   display: flex; flex-direction: column; gap: 4px;
   padding: 8px; border: 2px solid #3a3a3c; border-radius: 6px;
   cursor: pointer;
+  min-width: calc(5 * var(--tile-size, 46px) + 36px);
 }
 .board-grid {
   display: grid; grid-auto-rows: var(--tile-size, 46px); gap: 4px;
