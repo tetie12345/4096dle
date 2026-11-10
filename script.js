@@ -197,6 +197,7 @@ function submitGuess() {
   if (allLocked) {
     subtitleEl.textContent = 'Solved! Answers: ' + answers.join(', ');
     showMessage('You win! Answers: ' + answers.join(', '));
+    updateStatus(true);
     gameOver = true;
     return;
   }
@@ -208,6 +209,7 @@ function submitGuess() {
     ensureRows(w, currentRow + 5);
   }
   updateRowVisibility();
+  updateStatus(false);
   if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
     showMessage('Game over. Answers: ' + answers.join(', '));
@@ -259,6 +261,13 @@ function renderKeyboard() {
   });
 }
 
+function updateStatus(justSubmitted) {
+  const unsolved = locked.filter(x => !x).length;
+  const guessesLeft = ROWS - currentRow - (justSubmitted ? 1 : 0);
+  const extra = Math.max(0, guessesLeft - unsolved);
+  const statusEl = document.getElementById('status');
+  statusEl.innerHTML = '<span>Unsolved: ' + unsolved + '</span><span>Guesses left: ' + guessesLeft + '</span><span class="extra">Extra: ' + extra + '</span>';
+}
 function showMessage(msg) {
   messageEl.textContent = msg;
   if (msg.startsWith('You win') || msg.startsWith('Game over') || msg.startsWith('Answers')) {
@@ -282,6 +291,7 @@ function newGame() {
     delete k.dataset.state;
   });
   selectWord(0);
+  updateStatus(false);
   subtitleEl.textContent = numWords === 1
     ? 'Guess the word in 6 tries'
     : `Guess ${numWords} words at once in 6 tries`;

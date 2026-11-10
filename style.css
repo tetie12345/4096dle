@@ -76,6 +76,9 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .key.present { background: #b59f3b; }
 .key.absent { background: #3a3a3c; }
 
+.status { display: flex; gap: 16px; justify-content: center; margin: 8px 0; font-size: 0.95rem; color: #d7dadc; }
+.status span { background: #2a2a2c; padding: 4px 10px; border-radius: 4px; }
+.status .extra { color: #6aaa64; }
 .hint { color: #818384; font-size: 0.8rem; margin-bottom: 8px; }
 .message { min-height: 28px; margin: 12px 0; font-weight: 700; font-size: 1.3rem; color: #6aaa64; }
 .actions { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
