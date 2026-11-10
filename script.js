@@ -96,7 +96,7 @@ function initBoard() {
     board[w] = [];
     wb.addEventListener('click', () => selectWord(w));
   }
-  setTimeout(updateVisibleBoards, 50);
+  setTimeout(() => { updateVisibleBoards(); updateBoardMinHeights(); }, 50);
 }
 
 function renderBoard(w) {
@@ -152,6 +152,16 @@ function clearBoard(w) {
   const grid = wb.querySelector('.board-grid') || wb.children[1];
   if (grid) grid.innerHTML = '';
   board[w] = [];
+}
+
+function updateBoardMinHeights() {
+  const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 46;
+  const rows = Math.min(ROWS, (currentRow || 0) + 6);
+  const h = rows * (tileSize + 4) + 40;
+  for (let w = 0; w < numWords; w++) {
+    const wb = boardEls[w];
+    if (wb) wb.style.minHeight = h + 'px';
+  }
 }
 
 function updateRowVisibilityOne(w) {
@@ -336,6 +346,7 @@ function submitGuess() {
   currentRow++;
   currentCol = 0;
   updateStatus(false);
+  updateBoardMinHeights();
   if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
     showMessage('Game over. Answers: ' + answers.join(', '));
@@ -605,8 +616,8 @@ window.addEventListener('scroll', () => {
   if (_scrollTimer) return;
   _scrollTimer = setTimeout(() => {
     _scrollTimer = null;
-    if (!_isStill) updateVisibleBoards();
-  }, 500);
+    updateVisibleBoards();
+  }, 150);
 }, true);
 
 document.addEventListener('keydown', e => {
