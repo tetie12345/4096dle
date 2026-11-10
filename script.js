@@ -474,10 +474,12 @@ function updateStatus(justSubmitted) {
 }
 function showMessage(msg) {
   messageEl.textContent = msg;
+  if (msg) messageEl.classList.add('show');
+  else messageEl.classList.remove('show');
   if (msg.startsWith('You win') || msg.startsWith('Game over') || msg.startsWith('Answers')) {
     // keep visible
-  } else {
-    setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
+  } else if (msg) {
+    setTimeout(() => { if (messageEl.textContent === msg) { messageEl.textContent = ''; messageEl.classList.remove('show'); } }, 2000);
   }
 }
 
@@ -487,6 +489,7 @@ function newGame() {
   currentCol = 0;
   gameOver = false;
   messageEl.textContent = '';
+  messageEl.classList.remove('show');
   boardEl.innerHTML = '';
   visibleBoards = new Set();
   minimapState = [];
