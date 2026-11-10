@@ -131,7 +131,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .hint { color: #818384; font-size: 0.8rem; margin-bottom: 8px; }
 .message {
   position: fixed; top: 12%; left: 50%; transform: translateX(-50%);
-  z-index: 200; min-height: 0; margin: 0;
+  z-index: 200; min-height: 20px; margin: 0;
   background: #2a2a2c; color: #d7dadc; padding: 10px 20px;
   border-radius: 8px; font-weight: 700; font-size: 1.1rem;
   pointer-events: none; opacity: 0; transition: opacity 0.2s;
@@ -140,10 +140,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .actions { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
 /* Mobile responsiveness */
 @media (max-width: 600px) {
-  .container {
-    padding: 0 8px 140px 8px;
-    max-width: 100%;
-  }
+  .container { padding: 0 8px 130px 8px; max-width: 100%; }
   header h1 { font-size: 1.6rem; letter-spacing: 0.15rem; }
   .subtitle { font-size: 0.8rem; }
   .github-link a { font-size: 0.8rem; padding: 4px 8px; }
@@ -161,39 +158,28 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
   .word-board { min-width: calc(5 * var(--tile-size, 34px) + 24px); padding: 4px; }
   .tile { font-size: calc(var(--tile-size, 34px) * 0.5); }
 
-  .keyboard { padding: 4px; gap: 3px; left: 50%; bottom: calc(var(--safe-area-bottom, 0px) + 8px); }
+  .keyboard { padding: 4px; gap: 3px; left: 50%; bottom: 8px; }
   .kb-row { gap: 2px; }
   .key { min-width: 24px; height: 28px; font-size: 0.8rem; }
   .key.wide { min-width: 36px; font-size: 0.6rem; }
 
-  .status { margin-bottom: 120px; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
+  .status { margin-bottom: 160px; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
   .status span { padding: 3px 6px; }
 
-  .games-left {
-    position: fixed; bottom: calc(var(--safe-area-bottom, 0px) + 72px); right: 8px;
-    font-size: 0.78rem; padding: 5px 10px; flex-direction: column; gap: 4px;
-  }
+  .games-left { position: fixed; bottom: 72px; right: 8px; font-size: 0.78rem; padding: 5px 10px; flex-direction: column; gap: 4px; }
 
-  .board-label-float {
-    position: fixed; bottom: calc(var(--safe-area-bottom, 0px) + 115px); right: 6px;
-    font-size: 0.75rem; padding: 3px 8px;
-  }
+  .board-label-float { position: fixed; bottom: 110px; right: 6px; font-size: 0.75rem; padding: 3px 8px; }
 
-  .minimap-toggle {
-    position: fixed; bottom: calc(var(--safe-area-bottom, 0px) + 115px); left: 8px;
-    font-size: 0.7rem; padding: 3px 8px;
-  }
+  .minimap-toggle { position: fixed; bottom: 110px; left: 8px; font-size: 0.7rem; padding: 3px 8px; }
 
   .hint { font-size: 0.7rem; }
   .message { font-size: 0.9rem; padding: 8px 14px; width: 90%; text-align: center; }
   .actions { gap: 6px; }
   .btn { padding: 8px 14px; font-size: 0.85rem; }
 
-  .minimap.old { max-width: 180px; bottom: calc(var(--safe-area-bottom, 0px) + 30px); left: 4px; }
+  .minimap.old { max-width: 180px; bottom: 30px; left: 4px; }
   .minimap.new { top: 2vh; left: 2vw; max-width: 96vw; max-height: 72vh; }
   .minimap.new .minimap-sq { width: 18px; height: 18px; }
-
-  .message { bottom: calc(var(--safe-area-bottom, 0px) + 80px); }
 }
 
 @media (max-width: 400px) {

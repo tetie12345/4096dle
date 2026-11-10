@@ -64,14 +64,5 @@
 <button class="minimap-toggle" id="minimapToggle">Hide Map</button>
 <script src="words.js"></script>
 <script src="script.js"></script>
-<script>
-  // Set safe area variable for iOS notched phones
-  const sa = window.visualViewport ? window.visualViewport.height : null;
-  document.documentElement.style.setProperty('--safe-area-bottom', `${sa || 0}px`);
-  window.addEventListener('resize', () => {
-    const sa2 = window.visualViewport ? window.visualViewport.height : null;
-    document.documentElement.style.setProperty('--safe-area-bottom', `${sa2 || 0}px`);
-  });
-</script>
 </body>
 </html>
