@@ -1,41 +1,62 @@
 const ROWS = 6, COLS = 5;
-let answer = '';
+let numWords = 1;
+let answers = [];
 let currentRow = 0;
 let currentCol = 0;
 let gameOver = false;
-let board = [];
+let board = []; // board[row][wordIndex][col] = tile element
+let solved = []; // solved[wordIndex] = bool
 
 const boardEl = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
 const messageEl = document.getElementById('message');
-
-function pickAnswer() {
-  answer = ANSWERS[Math.floor(Math.random() * ANSWERS.length)].toUpperCase();
-}
-
-function initBoard() {
-  boardEl.innerHTML = '';
-  board = [];
-  for (let r = 0; r < ROWS; r++) {
-    const row = document.createElement('div');
-    row.className = 'row';
-    const rowTiles = [];
-    for (let c = 0; c < COLS; c++) {
-      const tile = document.createElement('div');
-      tile.className = 'tile';
-      row.appendChild(tile);
-      rowTiles.push(tile);
-    }
-    boardEl.appendChild(row);
-    board.push(rowTiles);
-  }
-}
+const modeSelect = document.getElementById('modeSelect');
+const gameEl = document.getElementById('game');
+const subtitleEl = document.getElementById('subtitle');
 
 const KEYBOARD_LAYOUT = [
   ['Q','W','E','R','T','Y','U','I','O','P'],
   ['A','S','D','F','G','H','J','K','L'],
   ['ENTER','Z','X','C','V','B','N','M','BACK']
 ];
+
+function pickAnswers() {
+  const pool = [...ANSWERS];
+  answers = [];
+  const used = new Set();
+  while (answers.length < numWords) {
+    const w = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
+    if (used.has(w)) continue;
+    used.add(w);
+    answers.push(w);
+  }
+  solved = answers.map(() => false);
+}
+
+function initBoard() {
+  boardEl.innerHTML = '';
+  board = []; // board[wordIndex][row][col]
+  for (let w = 0; w < numWords; w++) {
+    const wb = document.createElement('div');
+    wb.className = 'word-board';
+    const rows = [];
+    for (let r = 0; r < ROWS; r++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'row';
+      const tiles = [];
+      for (let c = 0; c < COLS; c++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        rowEl.appendChild(tile);
+        tiles.push(tile);
+      }
+      wb.appendChild(rowEl);
+      rows.push(tiles);
+    }
+    boardEl.appendChild(wb);
+    board.push(rows);
+  }
+}
 
 function initKeyboard() {
   keyboardEl.innerHTML = '';
@@ -59,8 +80,11 @@ function handleKey(key) {
   if (key === 'BACK') {
     if (currentCol > 0) {
       currentCol--;
-      board[currentRow][currentCol].textContent = '';
-      board[currentRow][currentCol].classList.remove('filled');
+      for (let w = 0; w < numWords; w++) {
+        const tile = board[w][currentRow][currentCol];
+        tile.textContent = '';
+        tile.classList.remove('filled');
+      }
     }
     return;
   }
@@ -69,8 +93,11 @@ function handleKey(key) {
     return;
   }
   if (currentCol < COLS && /^[A-Z]$/.test(key)) {
-    board[currentRow][currentCol].textContent = key;
-    board[currentRow][currentCol].classList.add('filled');
+    for (let w = 0; w < numWords; w++) {
+      const tile = board[w][currentRow][currentCol];
+      tile.textContent = key;
+      tile.classList.add('filled');
+    }
     currentCol++;
   }
 }
@@ -80,18 +107,39 @@ function submitGuess() {
     showMessage('Not enough letters');
     return;
   }
-  const guess = board[currentRow].map(t => t.textContent).join('');
+  const guess = board[0][currentRow].map(t => t.textContent).join('');
   if (!VALID_GUESSES.has(guess.toLowerCase())) {
     showMessage('Not in word list');
     return;
   }
-  // Score
-  const result = scoreGuess(guess, answer);
-  for (let c = 0; c < COLS; c++) {
-    board[currentRow][c].classList.add(result[c]);
-    updateKeyColor(guess[c], result[c]);
+  // Score per word
+  const bestKeyState = {};
+  for (let w = 0; w < numWords; w++) {
+    if (solved[w]) {
+      for (let c = 0; c < COLS; c++) {
+        board[w][currentRow][c].classList.add('correct');
+      }
+      continue;
+    }
+    const result = scoreGuess(guess, answers[w]);
+    for (let c = 0; c < COLS; c++) {
+      board[w][currentRow][c].classList.add(result[c]);
+      const letter = guess[c];
+      const cur = bestKeyState[letter];
+      const priority = { correct: 3, present: 2, absent: 1 };
+      if (!cur || (priority[result[c]] || 0) > (priority[cur] || 0)) {
+        bestKeyState[letter] = result[c];
+      }
+    }
+    if (guess === answers[w]) {
+      solved[w] = true;
+    }
   }
-  if (guess === answer) {
+  const allSolved = solved.every(Boolean);
+  for (const letter in bestKeyState) {
+    updateKeyColor(letter, bestKeyState[letter]);
+  }
+  if (allSolved) {
     showMessage('You win! 🎉');
     gameOver = true;
     return;
@@ -99,7 +147,7 @@ function submitGuess() {
   currentRow++;
   currentCol = 0;
   if (currentRow === ROWS) {
-    showMessage('The word was ' + answer);
+    showMessage('Answers: ' + answers.join(', '));
     gameOver = true;
   }
 }
@@ -108,7 +156,6 @@ function scoreGuess(guess, answer) {
   const res = Array(COLS).fill('absent');
   const ansArr = answer.split('');
   const guessArr = guess.split('');
-  // correct position
   for (let i = 0; i < COLS; i++) {
     if (guessArr[i] === ansArr[i]) {
       res[i] = 'correct';
@@ -116,7 +163,6 @@ function scoreGuess(guess, answer) {
       guessArr[i] = null;
     }
   }
-  // present
   for (let i = 0; i < COLS; i++) {
     if (guessArr[i] === null) continue;
     const idx = ansArr.indexOf(guessArr[i]);
@@ -142,11 +188,15 @@ function updateKeyColor(letter, state) {
 
 function showMessage(msg) {
   messageEl.textContent = msg;
-  setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
+  if (msg.startsWith('You win') || msg.startsWith('Answers')) {
+    // keep
+  } else {
+    setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
+  }
 }
 
 function newGame() {
-  pickAnswer();
+  pickAnswers();
   currentRow = 0;
   currentCol = 0;
   gameOver = false;
@@ -157,15 +207,34 @@ function newGame() {
     k.classList.remove('correct','present','absent');
     delete k.dataset.state;
   });
+  subtitleEl.textContent = numWords === 1
+    ? 'Guess the word in 6 tries'
+    : `Guess ${numWords} words at once in 6 tries`;
 }
 
+function showMenu() {
+  gameEl.classList.add('hidden');
+  modeSelect.classList.remove('hidden');
+}
+
+function startMode(n) {
+  numWords = n;
+  modeSelect.classList.add('hidden');
+  gameEl.classList.remove('hidden');
+  newGame();
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => startMode(parseInt(btn.dataset.mode)));
+});
+
+document.getElementById('newGame').addEventListener('click', newGame);
+document.getElementById('menuBtn').addEventListener('click', showMenu);
+
 document.addEventListener('keydown', e => {
+  if (modeSelect && !modeSelect.classList.contains('hidden')) return;
   if (gameOver && e.key === 'Enter') { newGame(); return; }
   if (e.key === 'Enter') handleKey('ENTER');
   else if (e.key === 'Backspace') handleKey('BACK');
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
-
-document.getElementById('newGame').addEventListener('click', newGame);
-
-newGame();

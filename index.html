@@ -10,12 +10,26 @@
 <div class="container">
   <header>
     <h1>WORDLE</h1>
-    <div class="subtitle">Guess the 5-letter word in 6 tries</div>
+    <div class="subtitle" id="subtitle">Guess the word(s) in 6 tries</div>
   </header>
-  <div id="board" class="board"></div>
-  <div id="keyboard" class="keyboard"></div>
-  <div id="message" class="message"></div>
-  <button id="newGame" class="new-game">New Game</button>
+
+  <div id="modeSelect" class="mode-select">
+    <h2>Choose mode</h2>
+    <div class="mode-buttons">
+      <button class="mode-btn" data-mode="1">1 Word</button>
+      <button class="mode-btn" data-mode="4">4 Words</button>
+    </div>
+  </div>
+
+  <div id="game" class="game hidden">
+    <div id="board" class="board"></div>
+    <div id="keyboard" class="keyboard"></div>
+    <div id="message" class="message"></div>
+    <div class="actions">
+      <button id="newGame" class="btn">New Game</button>
+      <button id="menuBtn" class="btn">Menu</button>
+    </div>
+  </div>
 </div>
 <script src="words.js"></script>
 <script src="script.js"></script>
