@@ -257,8 +257,12 @@ function showMenu() {
 }
 
 function startMode(n) {
+  n = Math.max(1, Math.min(256, parseInt(n) || 1));
   numWords = n;
-  ROWS = (n === 1) ? 6 : 9;
+  ROWS = Math.min(200, n + 5);
+  // scale tile size
+  const size = n <= 4 ? 46 : (n <= 16 ? 34 : 24);
+  document.documentElement.style.setProperty('--tile-size', size + 'px');
   modeSelect.classList.add('hidden');
   gameEl.classList.remove('hidden');
   newGame();
@@ -266,6 +270,9 @@ function startMode(n) {
 
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => startMode(parseInt(btn.dataset.mode)));
+});
+document.getElementById('modeStart').addEventListener('click', () => {
+  startMode(document.getElementById('modeInput').value);
 });
 
 document.getElementById('newGame').addEventListener('click', newGame);

@@ -13,6 +13,10 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 
 .mode-select { margin-top: 60px; }
 .mode-select h2 { margin-bottom: 20px; }
+.mode-presets { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+.mode-custom { display: flex; gap: 10px; justify-content: center; align-items: center; margin-bottom: 12px; }
+.mode-custom input { padding: 10px; font-size: 1rem; width: 80px; border-radius: 4px; border: 1px solid #565758; background: #121213; color: #fff; }
+.mode-hint { color: #818384; font-size: 0.85rem; }
 .mode-buttons { display: flex; gap: 16px; justify-content: center; }
 .mode-btn {
   padding: 16px 32px; background: #538d4e; border: none; border-radius: 6px;
@@ -35,10 +39,10 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .word-board:hover { border-color: #565758; }
 .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .tile {
-  width: 46px; height: 46px;
+  width: var(--tile-size, 46px); height: var(--tile-size, 46px);
   border: 2px solid #3a3a3c;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; font-weight: 700; text-transform: uppercase;
+  font-size: calc(var(--tile-size, 46px) * 0.5); font-weight: 700; text-transform: uppercase;
 }
 .tile.filled { border-color: #565758; animation: pop 0.1s; }
 .tile.correct { background: #538d4e; border-color: #538d4e; }
