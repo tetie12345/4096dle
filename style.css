@@ -42,6 +42,17 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
   font-size: 0.75rem; color: #818384; text-align: center; font-weight: 700;
   position: sticky; top: 0; background: #121213; z-index: 2; padding: 2px 0;
 }
+.minimap {
+  position: fixed; bottom: 10px; left: 10px; z-index: 101;
+  display: grid; gap: 2px; padding: 6px; background: #2a2a2c; border-radius: 6px;
+  max-width: 260px;
+}
+.minimap-sq {
+  width: 10px; height: 10px; border-radius: 2px; background: #3a3a3c;
+}
+.minimap-sq.solved { background: #538d4e; }
+.minimap-sq.solvable { background: #b59f3b; }
+.minimap-sq.selected { outline: 1px solid #fff; }
 .board-label-float {
   position: fixed; bottom: 10px; right: 10px; z-index: 101;
   background: #2a2a2c; color: #d7dadc; padding: 6px 12px; border-radius: 6px;

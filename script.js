@@ -3,6 +3,7 @@ let ROWS = 6;
 let numWords = 1;
 let selectedWord = 0;
 let keyStates = []; // keyStates[w] = { letter: state }
+let foundLetters = []; // foundLetters[w] = Set of found letters
 let answers = [];
 let locked = []; // locked[w] = bool
 let currentRow = 0;
@@ -36,6 +37,7 @@ function pickAnswers() {
   }
   locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
+  foundLetters = answers.map(() => new Set());
   selectedWord = 0;
 }
 
@@ -187,12 +189,19 @@ function submitGuess() {
         ks[letter] = bestKeyState[letter];
       }
     }
+    // track found letters for minimap
+    for (let c = 0; c < COLS; c++) {
+      if (result[c] === 'correct' || result[c] === 'present') {
+        foundLetters[w].add(guess[c]);
+      }
+    }
     if (guess === answers[w]) {
       locked[w] = true;
       boardEls[w].classList.add('locked');
     }
   }
   renderKeyboard();
+  renderMinimap();
   const allLocked = locked.every(Boolean);
   if (allLocked) {
     subtitleEl.textContent = 'Solved! Answers: ' + answers.join(', ');
@@ -239,6 +248,28 @@ function scoreGuess(guess, answer) {
   return res;
 }
 
+function renderMinimap() {
+  const mm = document.getElementById('minimap');
+  if (!mm) return;
+  const cols = Math.ceil(Math.sqrt(numWords));
+  mm.style.gridTemplateColumns = `repeat(${cols}, 10px)`;
+  mm.innerHTML = '';
+  for (let w = 0; w < numWords; w++) {
+    const sq = document.createElement('div');
+    sq.className = 'minimap-sq';
+    if (locked[w]) sq.classList.add('solved');
+    else {
+      const distinct = new Set(answers[w].split(''));
+      let solvable = true;
+      for (const l of distinct) { if (!foundLetters[w].has(l)) { solvable = false; break; } }
+      if (solvable) sq.classList.add('solvable');
+    }
+    if (w === selectedWord) sq.classList.add('selected');
+    sq.title = 'Board ' + (w + 1);
+    sq.addEventListener('click', () => selectWord(w));
+    mm.appendChild(sq);
+  }
+}
 function selectWord(w) {
   selectedWord = w;
   document.querySelectorAll('.word-board').forEach((wb, idx) => {
@@ -247,6 +278,7 @@ function selectWord(w) {
   const fl = document.getElementById('boardLabelFloat');
   if (fl) fl.textContent = 'Board ' + (w + 1);
   renderKeyboard();
+  renderMinimap();
 }
 
 function renderKeyboard() {
@@ -294,6 +326,7 @@ function newGame() {
   });
   selectWord(0);
   updateStatus(false);
+  renderMinimap();
   subtitleEl.textContent = numWords === 1
     ? 'Guess the word in 6 tries'
     : `Guess ${numWords} words at once in 6 tries`;
