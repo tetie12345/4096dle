@@ -69,7 +69,8 @@ function initKeyboard() {
       btn.className = 'key' + (key === 'ENTER' || key === 'BACK' ? ' wide' : '');
       btn.textContent = key === 'BACK' ? '⌫' : key;
       btn.dataset.key = key;
-      btn.addEventListener('click', () => handleKey(key));
+      btn.setAttribute('tabindex', '-1');
+      btn.addEventListener('click', () => { handleKey(key); btn.blur(); });
       rowEl.appendChild(btn);
     });
     keyboardEl.appendChild(rowEl);
@@ -237,8 +238,7 @@ document.getElementById('menuBtn').addEventListener('click', showMenu);
 
 document.addEventListener('keydown', e => {
   if (modeSelect && !modeSelect.classList.contains('hidden')) return;
-  if (gameOver && e.key === 'Enter') { newGame(); return; }
-  if (e.key === 'Enter') handleKey('ENTER');
-  else if (e.key === 'Backspace') handleKey('BACK');
+  if (e.key === 'Enter') { e.preventDefault(); if (gameOver) { newGame(); return; } handleKey('ENTER'); }
+  else if (e.key === 'Backspace') { e.preventDefault(); handleKey('BACK'); }
   else if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
 });
