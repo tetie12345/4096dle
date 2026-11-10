@@ -44,6 +44,12 @@ function initBoard() {
   for (let w = 0; w < numWords; w++) {
     const wb = document.createElement('div');
     wb.className = 'word-board';
+    const label = document.createElement('div');
+    label.className = 'board-label';
+    label.textContent = (w + 1);
+    wb.appendChild(label);
+    const grid = document.createElement('div');
+    grid.className = 'board-grid';
     const rows = [];
     for (let r = 0; r < ROWS; r++) {
       const rowEl = document.createElement('div');
@@ -55,9 +61,10 @@ function initBoard() {
         rowEl.appendChild(tile);
         tiles.push(tile);
       }
-      wb.appendChild(rowEl);
+      grid.appendChild(rowEl);
       rows.push(tiles);
     }
+    wb.appendChild(grid);
     boardEl.appendChild(wb);
     board.push(rows);
     // selection
@@ -263,6 +270,7 @@ function startMode(n) {
   // scale tile size
   const size = n <= 4 ? 46 : (n <= 16 ? 34 : 24);
   document.documentElement.style.setProperty('--tile-size', size + 'px');
+  document.documentElement.style.setProperty('--rows', ROWS);
   modeSelect.classList.add('hidden');
   gameEl.classList.remove('hidden');
   newGame();
@@ -280,11 +288,11 @@ document.getElementById('menuBtn').addEventListener('click', showMenu);
 document.getElementById('toggleKb').addEventListener('click', () => {
   const kb = document.getElementById('keyboard');
   const btn = document.getElementById('toggleKb');
-  if (kb.style.display === 'none') {
-    kb.style.display = '';
+  if (kb.classList.contains('hidden-kb')) {
+    kb.classList.remove('hidden-kb');
     btn.textContent = 'Hide KB';
   } else {
-    kb.style.display = 'none';
+    kb.classList.add('hidden-kb');
     btn.textContent = 'Show KB';
   }
 });
