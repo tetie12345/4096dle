@@ -11,6 +11,10 @@ let currentCol = 0;
 let gameOver = false;
 let board = []; // board[w] = array of rows; row = array of tile elements
 let boardEls = []; // boardEls[w] = word-board container element
+let currentGuess = ''; // in-progress guess string
+let guesses = []; // global guess history (same for all boards)
+let visibleBoards = new Set(); // set of board indices currently in viewport
+let boardObserver = null;
 
 const boardEl = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
@@ -45,6 +49,8 @@ function pickAnswers() {
   locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
   foundLetters = answers.map(() => new Set());
+  guesses = [];
+  currentGuess = '';
   selectedWord = 0;
 }
 
@@ -68,36 +74,110 @@ function ensureRows(w, upTo) {
 }
 
 function initBoard() {
-  const initialRows = Math.min(ROWS - 1, 5);
-  let html = '';
-  for (let w = 0; w < numWords; w++) {
-    html += '<div class="word-board" data-w="' + w + '"><div class="board-label">' + (w + 1) + '</div><div class="board-grid">';
-    for (let r = 0; r <= initialRows; r++) {
-      html += '<div class="row">';
-      for (let c = 0; c < COLS; c++) html += '<div class="tile"></div>';
-      html += '</div>';
-    }
-    html += '</div></div>';
-  }
-  boardEl.innerHTML = html;
+  boardEl.innerHTML = '';
   board = [];
   boardEls = [];
+  visibleBoards = new Set();
+  let html = '';
+  for (let w = 0; w < numWords; w++) {
+    html += '<div class="word-board" data-w="' + w + '"><div class="board-label">' + (w + 1) + '</div><div class="board-grid"></div></div>';
+  }
+  boardEl.innerHTML = html;
   const boards = boardEl.children;
   for (let w = 0; w < numWords; w++) {
     const wb = boards[w];
     boardEls.push(wb);
-    const grid = wb.children[1];
-    const rows = [];
-    for (let i = 0; i < grid.children.length; i++) {
-      const rowEl = grid.children[i];
-      const tiles = [];
-      for (let j = 0; j < rowEl.children.length; j++) tiles.push(rowEl.children[j]);
-      rows.push(tiles);
-    }
-    board.push(rows);
+    board.push([]);
     wb.addEventListener('click', () => selectWord(w));
+    if (boardObserver) boardObserver.observe(wb);
   }
-  updateRowVisibility();
+}
+
+function renderBoard(w) {
+  const wb = boardEls[w];
+  if (!wb) return;
+  const grid = wb.querySelector('.board-grid') || wb.children[1];
+  grid.innerHTML = '';
+  board[w] = [];
+  const numRows = Math.min(guesses.length + 1, ROWS); // at least 1 row
+  // ensure at least currentRow+1 rows up to ROWS
+  const totalRows = Math.min(ROWS, Math.max(numRows, currentRow + 6));
+  for (let r = 0; r < totalRows; r++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'row';
+    const tiles = [];
+    for (let c = 0; c < COLS; c++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      rowEl.appendChild(tile);
+      tiles.push(tile);
+    }
+    grid.appendChild(rowEl);
+    board[w].push(tiles);
+  }
+  // fill from guesses
+  for (let r = 0; r < guesses.length; r++) {
+    const g = guesses[r];
+    const res = scoreGuess(g, answers[w]);
+    for (let c = 0; c < COLS; c++) {
+      const tile = board[w][r][c];
+      tile.textContent = g[c];
+      tile.classList.add(res[c]);
+    }
+  }
+  // current row input (if not locked and within range)
+  if (!locked[w] && guesses.length < ROWS) {
+    const row = board[w][guesses.length];
+    if (row) {
+      for (let c = 0; c < currentCol; c++) {
+        if (row[c]) {
+          row[c].textContent = currentGuess[c] || '';
+          row[c].classList.add('filled');
+        }
+      }
+    }
+  }
+  updateRowVisibilityOne(w);
+}
+
+function clearBoard(w) {
+  const wb = boardEls[w];
+  if (!wb) return;
+  const grid = wb.querySelector('.board-grid') || wb.children[1];
+  if (grid) grid.innerHTML = '';
+  board[w] = [];
+}
+
+function updateRowVisibilityOne(w) {
+  if (!board[w] || !board[w].length) return;
+  for (let r = 0; r < board[w].length; r++) {
+    const rowEl = board[w][r][0].parentNode;
+    if (r <= currentRow + 5) rowEl.style.display = '';
+    else rowEl.style.display = 'none';
+  }
+}
+
+function updateVisibleBoards() {
+  if (!boardEls.length) return;
+  const vh = window.innerHeight;
+  const margin = 300;
+  for (let w = 0; w < numWords; w++) {
+    const wb = boardEls[w];
+    if (!wb) continue;
+    const rect = wb.getBoundingClientRect();
+    const inView = rect.bottom > -margin && rect.top < vh + margin;
+    if (inView) {
+      if (!visibleBoards.has(w)) {
+        visibleBoards.add(w);
+        renderBoard(w);
+      }
+    } else {
+      if (visibleBoards.has(w) && w !== selectedWord) {
+        visibleBoards.delete(w);
+        clearBoard(w);
+      }
+    }
+  }
 }
 
 function updateRowVisibility() {
@@ -143,12 +223,13 @@ function handleKey(key) {
   if (key === 'BACK') {
     if (currentCol > 0) {
       currentCol--;
-      for (let w = 0; w < numWords; w++) {
+      currentGuess = currentGuess.slice(0, -1);
+      for (const w of visibleBoards) {
         if (locked[w]) continue;
         ensureRows(w, currentRow);
+        if (!board[w] || !board[w][currentRow]) continue;
         const tile = board[w][currentRow][currentCol];
-        tile.textContent = '';
-        tile.classList.remove('filled');
+        if (tile) { tile.textContent = ''; tile.classList.remove('filled'); }
       }
     }
     return;
@@ -158,12 +239,13 @@ function handleKey(key) {
     return;
   }
   if (currentCol < COLS && /^[A-Z]$/.test(key)) {
-    for (let w = 0; w < numWords; w++) {
+    currentGuess += key;
+    for (const w of visibleBoards) {
       if (locked[w]) continue;
       ensureRows(w, currentRow);
+      if (!board[w] || !board[w][currentRow]) continue;
       const tile = board[w][currentRow][currentCol];
-      tile.textContent = key;
-      tile.classList.add('filled');
+      if (tile) { tile.textContent = key; tile.classList.add('filled'); }
     }
     currentCol++;
   }
@@ -174,22 +256,23 @@ function submitGuess() {
     showMessage('Not enough letters');
     return;
   }
+  const guess = currentGuess.toUpperCase();
+  if (guess.length !== COLS) {
+    showMessage('Not enough letters');
+    return;
+  }
   const gb = firstUnlockedBoard();
   if (gb === -1) { gameOver = true; return; }
-  ensureRows(gb, currentRow);
-  const guess = board[gb][currentRow].map(t => t.textContent).join('');
   if (!VALID_GUESSES.has(guess.toLowerCase())) {
     showMessage('Not in word list');
     return;
   }
-  // Score per word
+  // Score per word (data only)
   for (let w = 0; w < numWords; w++) {
     if (locked[w]) continue;
-    ensureRows(w, currentRow);
     const result = scoreGuess(guess, answers[w]);
     const bestKeyState = {};
     for (let c = 0; c < COLS; c++) {
-      board[w][currentRow][c].classList.add(result[c]);
       const letter = guess[c];
       const cur = bestKeyState[letter];
       const priority = { correct: 3, present: 2, absent: 1 };
@@ -214,8 +297,14 @@ function submitGuess() {
     }
     if (guess === answers[w]) {
       locked[w] = true;
-      boardEls[w].classList.add('locked');
+      if (boardEls[w]) boardEls[w].classList.add('locked');
     }
+  }
+  guesses.push(guess);
+  currentGuess = '';
+  // Re-render visible boards
+  for (const w of visibleBoards) {
+    renderBoard(w);
   }
   renderKeyboard();
   renderMinimap();
@@ -229,12 +318,6 @@ function submitGuess() {
   }
   currentRow++;
   currentCol = 0;
-  // ensure rows for next typing
-  for (let w = 0; w < numWords; w++) {
-    if (locked[w]) continue;
-    ensureRows(w, currentRow + 5);
-  }
-  updateRowVisibility();
   updateStatus(false);
   if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
@@ -310,6 +393,11 @@ function selectWord(w) {
   renderMinimap();
   if (boardEls[w]) {
     boardEls[w].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    if (!visibleBoards.has(w)) {
+      visibleBoards.add(w);
+      renderBoard(w);
+    }
+    setTimeout(updateVisibleBoards, 250);
   }
 }
 
@@ -350,23 +438,28 @@ function newGame() {
   gameOver = false;
   messageEl.textContent = '';
   boardEl.innerHTML = '';
+  visibleBoards = new Set();
   initBoard();
+  // render initially visible boards
+  setTimeout(updateVisibleBoards, 100);
   initKeyboard();
   keyboardEl.querySelectorAll('.key').forEach(k => {
     k.classList.remove('correct','present','absent');
     delete k.dataset.state;
   });
-  buildMinimap();
-  if (numWords > 64) {
-    document.getElementById('minimap').classList.add('collapsed');
-    document.getElementById('minimapToggle').textContent = 'Map';
-  } else {
-    document.getElementById('minimap').classList.remove('collapsed');
-    document.getElementById('minimapToggle').textContent = 'Hide Map';
-  }
+  setTimeout(() => {
+    buildMinimap();
+    if (numWords > 64) {
+      document.getElementById('minimap').classList.add('collapsed');
+      document.getElementById('minimapToggle').textContent = 'Map';
+    } else {
+      document.getElementById('minimap').classList.remove('collapsed');
+      document.getElementById('minimapToggle').textContent = 'Hide Map';
+    }
+    renderMinimap();
+  }, 0);
   selectWord(0);
   updateStatus(false);
-  renderMinimap();
   subtitleEl.textContent = numWords === 1
     ? 'Guess the word in 6 tries'
     : `Guess ${numWords} words at once in 6 tries`;
@@ -420,6 +513,12 @@ document.getElementById('minimapToggle').addEventListener('click', () => {
     btn.textContent = 'Map';
   }
 });
+
+let _scrollTimer = null;
+window.addEventListener('scroll', () => {
+  if (_scrollTimer) return;
+  _scrollTimer = setTimeout(() => { _scrollTimer = null; updateVisibleBoards(); }, 120);
+}, true);
 
 document.addEventListener('keydown', e => {
   if (modeSelect && !modeSelect.classList.contains('hidden')) return;
