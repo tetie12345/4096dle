@@ -4,11 +4,12 @@ let numWords = 1;
 let selectedWord = 0;
 let keyStates = []; // keyStates[w] = { letter: state }
 let answers = [];
+let locked = []; // locked[w] = bool
 let currentRow = 0;
 let currentCol = 0;
 let gameOver = false;
-let board = []; // board[row][wordIndex][col] = tile element
-let solved = []; // solved[wordIndex] = bool
+let board = []; // board[w] = array of rows; row = array of tile elements
+let boardEls = []; // boardEls[w] = word-board container element
 
 const boardEl = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
@@ -33,14 +34,34 @@ function pickAnswers() {
     used.add(w);
     answers.push(w);
   }
-  solved = answers.map(() => false);
+  locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
   selectedWord = 0;
 }
 
+function ensureRows(w, upTo) {
+  const wb = boardEls[w];
+  const grid = wb.querySelector('.board-grid');
+  while (board[w].length <= upTo) {
+    const r = board[w].length;
+    const rowEl = document.createElement('div');
+    rowEl.className = 'row';
+    const tiles = [];
+    for (let c = 0; c < COLS; c++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      rowEl.appendChild(tile);
+      tiles.push(tile);
+    }
+    grid.appendChild(rowEl);
+    board[w].push(tiles);
+  }
+}
+
 function initBoard() {
   boardEl.innerHTML = '';
-  board = []; // board[wordIndex][row][col]
+  board = [];
+  boardEls = [];
   for (let w = 0; w < numWords; w++) {
     const wb = document.createElement('div');
     wb.className = 'word-board';
@@ -50,25 +71,26 @@ function initBoard() {
     wb.appendChild(label);
     const grid = document.createElement('div');
     grid.className = 'board-grid';
-    const rows = [];
-    for (let r = 0; r < ROWS; r++) {
-      const rowEl = document.createElement('div');
-      rowEl.className = 'row';
-      const tiles = [];
-      for (let c = 0; c < COLS; c++) {
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        rowEl.appendChild(tile);
-        tiles.push(tile);
-      }
-      grid.appendChild(rowEl);
-      rows.push(tiles);
-    }
     wb.appendChild(grid);
     boardEl.appendChild(wb);
-    board.push(rows);
-    // selection
+    board.push([]);
+    boardEls.push(wb);
+    ensureRows(w, Math.min(ROWS - 1, 5));
     wb.addEventListener('click', () => selectWord(w));
+  }
+  updateRowVisibility();
+}
+
+function updateRowVisibility() {
+  for (let w = 0; w < numWords; w++) {
+    for (let r = 0; r < board[w].length; r++) {
+      const rowEl = board[w][r][0].parentNode;
+      if (r <= currentRow + 5) {
+        rowEl.style.display = '';
+      } else {
+        rowEl.style.display = 'none';
+      }
+    }
   }
 }
 
@@ -90,12 +112,21 @@ function initKeyboard() {
   });
 }
 
+function firstUnlockedBoard() {
+  for (let w = 0; w < numWords; w++) {
+    if (!locked[w]) return w;
+  }
+  return -1;
+}
+
 function handleKey(key) {
   if (gameOver) return;
   if (key === 'BACK') {
     if (currentCol > 0) {
       currentCol--;
       for (let w = 0; w < numWords; w++) {
+        if (locked[w]) continue;
+        ensureRows(w, currentRow);
         const tile = board[w][currentRow][currentCol];
         tile.textContent = '';
         tile.classList.remove('filled');
@@ -109,6 +140,8 @@ function handleKey(key) {
   }
   if (currentCol < COLS && /^[A-Z]$/.test(key)) {
     for (let w = 0; w < numWords; w++) {
+      if (locked[w]) continue;
+      ensureRows(w, currentRow);
       const tile = board[w][currentRow][currentCol];
       tile.textContent = key;
       tile.classList.add('filled');
@@ -122,19 +155,18 @@ function submitGuess() {
     showMessage('Not enough letters');
     return;
   }
-  const guess = board[0][currentRow].map(t => t.textContent).join('');
+  const gb = firstUnlockedBoard();
+  if (gb === -1) { gameOver = true; return; }
+  ensureRows(gb, currentRow);
+  const guess = board[gb][currentRow].map(t => t.textContent).join('');
   if (!VALID_GUESSES.has(guess.toLowerCase())) {
     showMessage('Not in word list');
     return;
   }
   // Score per word
   for (let w = 0; w < numWords; w++) {
-    if (solved[w]) {
-      for (let c = 0; c < COLS; c++) {
-        board[w][currentRow][c].classList.add('correct');
-      }
-      continue;
-    }
+    if (locked[w]) continue;
+    ensureRows(w, currentRow);
     const result = scoreGuess(guess, answers[w]);
     const bestKeyState = {};
     for (let c = 0; c < COLS; c++) {
@@ -156,12 +188,13 @@ function submitGuess() {
       }
     }
     if (guess === answers[w]) {
-      solved[w] = true;
+      locked[w] = true;
+      boardEls[w].classList.add('locked');
     }
   }
   renderKeyboard();
-  const allSolved = solved.every(Boolean);
-  if (allSolved) {
+  const allLocked = locked.every(Boolean);
+  if (allLocked) {
     subtitleEl.textContent = 'Solved! Answers: ' + answers.join(', ');
     showMessage('You win! Answers: ' + answers.join(', '));
     gameOver = true;
@@ -169,7 +202,13 @@ function submitGuess() {
   }
   currentRow++;
   currentCol = 0;
-  if (currentRow === ROWS) {
+  // ensure rows for next typing
+  for (let w = 0; w < numWords; w++) {
+    if (locked[w]) continue;
+    ensureRows(w, currentRow + 5);
+  }
+  updateRowVisibility();
+  if (currentRow >= ROWS) {
     subtitleEl.textContent = 'Answers: ' + answers.join(', ');
     showMessage('Game over. Answers: ' + answers.join(', '));
     gameOver = true;
@@ -198,27 +237,6 @@ function scoreGuess(guess, answer) {
   return res;
 }
 
-function updateKeyColor(letter, state) {
-  const btn = keyboardEl.querySelector(`[data-key="${letter}"]`);
-  if (!btn) return;
-  const priority = { correct: 3, present: 2, absent: 1 };
-  const current = btn.dataset.state || '';
-  if ((priority[state] || 0) > (priority[current] || 0)) {
-    btn.classList.remove('correct','present','absent');
-    btn.classList.add(state);
-    btn.dataset.state = state;
-  }
-}
-
-function showMessage(msg) {
-  messageEl.textContent = msg;
-  if (msg.startsWith('You win') || msg.startsWith('Game over') || msg.startsWith('Answers')) {
-    // keep visible
-  } else {
-    setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
-  }
-}
-
 function selectWord(w) {
   selectedWord = w;
   document.querySelectorAll('.word-board').forEach((wb, idx) => {
@@ -240,12 +258,23 @@ function renderKeyboard() {
     }
   });
 }
+
+function showMessage(msg) {
+  messageEl.textContent = msg;
+  if (msg.startsWith('You win') || msg.startsWith('Game over') || msg.startsWith('Answers')) {
+    // keep visible
+  } else {
+    setTimeout(() => { if (messageEl.textContent === msg) messageEl.textContent = ''; }, 2000);
+  }
+}
+
 function newGame() {
   pickAnswers();
   currentRow = 0;
   currentCol = 0;
   gameOver = false;
   messageEl.textContent = '';
+  boardEl.innerHTML = '';
   initBoard();
   initKeyboard();
   keyboardEl.querySelectorAll('.key').forEach(k => {
@@ -267,7 +296,6 @@ function startMode(n) {
   n = Math.max(1, Math.min(256, parseInt(n) || 1));
   numWords = n;
   ROWS = Math.min(200, n + 5);
-  // scale tile size
   const size = n <= 4 ? 46 : (n <= 16 ? 34 : 24);
   document.documentElement.style.setProperty('--tile-size', size + 'px');
   document.documentElement.style.setProperty('--rows', ROWS);

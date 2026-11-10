@@ -41,6 +41,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 .board-label {
   font-size: 0.75rem; color: #818384; text-align: center; font-weight: 700;
 }
+.word-board.locked { opacity: 0.6; pointer-events: none; border-color: #538d4e; }
 .word-board.selected { border-color: #6aaa64; box-shadow: 0 0 8px #6aaa64; }
 .word-board:hover { border-color: #565758; }
 .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
