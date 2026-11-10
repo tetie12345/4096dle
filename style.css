@@ -167,7 +167,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
   .status { margin-bottom: 110px; gap: 8px; font-size: 0.8rem; flex-wrap: wrap; }
   .status span { padding: 3px 6px; }
 
-  .games-left { bottom: 120px; right: 8px; font-size: 0.78rem; padding: 5px 10px; gap: 6px; flex-direction: column; gap: 6px; }
+  .games-left { bottom: 120px; right: 8px; font-size: 0.78rem; padding: 5px 10px; flex-direction: column; gap: 4px; }
   .board-label-float { bottom: 115px; right: 6px; font-size: 0.75rem; padding: 3px 8px; }
   .minimap-toggle { bottom: 115px; left: 8px; font-size: 0.7rem; padding: 3px 8px; }
 
@@ -191,13 +191,3 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; }
 }
 .btn { padding: 10px 20px; background: #538d4e; border: none; border-radius: 4px; color: #fff; font-weight: 700; cursor: pointer; font-size: 1rem; }
 .btn:hover { background: #6aaa64; }
-
-/* Mobile: push below keyboard and make vertical list below 600px */
-@media (max-width: 600px) {
-  /* games-left: move above keyboard */
-  .games-left { bottom: 120px; right: 8px; font-size: 0.78rem; padding: 5px 10px; gap: 6px; }
-  /* At 600px and below, show as vertical list on the side */
-  .games-left { flex-direction: column; gap: 4px; font-size: 0.8rem; padding: 6px 12px; }
-  .board-label-float { bottom: 115px; right: 6px; font-size: 0.75rem; padding: 3px 8px; }
-  .minimap-toggle { bottom: 115px; left: 8px; font-size: 0.7rem; padding: 3px 8px; }
-}
