@@ -15,6 +15,7 @@ let currentGuess = ''; // in-progress guess string
 let guesses = []; // global guess history (same for all boards)
 let visibleBoards = new Set(); // set of board indices currently in viewport
 let minimapState = []; // cached state per board for minimap diffing
+let minimapMode = 'none'; // 'none' | 'old' | 'new'
 let boardObserver = null;
 
 const boardEl = document.getElementById('board');
@@ -367,9 +368,18 @@ function scoreGuess(guess, answer) {
 function buildMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
-  const sqSize = 24, gap = 4;
-  const availW = Math.floor(window.innerWidth * 0.9);
-  const cols = Math.max(1, Math.min(numWords, Math.floor(availW / (sqSize + gap))));
+  const sqSize = minimapMode === 'old' ? 10 : 24;
+  const gap = minimapMode === 'old' ? 2 : 4;
+  let cols;
+  if (minimapMode === 'old') {
+    cols = Math.ceil(Math.sqrt(numWords));
+    // cap to container width
+    const maxCols = Math.floor(260 / (sqSize + gap));
+    if (cols > maxCols) cols = maxCols;
+  } else {
+    const availW = Math.floor(window.innerWidth * 0.9);
+    cols = Math.max(1, Math.min(numWords, Math.floor(availW / (sqSize + gap))));
+  }
   mm.style.gridTemplateColumns = `repeat(${cols}, ${sqSize}px)`;
   mm.innerHTML = '';
   for (let w = 0; w < numWords; w++) {
@@ -383,6 +393,7 @@ function buildMinimap() {
 function renderMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
+  if (mm.classList.contains('hidden')) return;
   if (mm.classList.contains('collapsed')) return;
   const sqs = mm.children;
   if (!sqs.length) return;
@@ -491,14 +502,34 @@ function newGame() {
     delete k.dataset.state;
   });
   setTimeout(() => {
-    buildMinimap();
-    if (numWords > 64) {
-      document.getElementById('minimap').classList.add('collapsed');
-      document.getElementById('minimapToggle').textContent = 'Map';
-    } else {
-      document.getElementById('minimap').classList.remove('collapsed');
-      document.getElementById('minimapToggle').textContent = 'Hide Map';
+    // Determine minimap mode
+    if (numWords < 16) minimapMode = 'none';
+    else if (numWords < 256) minimapMode = 'old';
+    else minimapMode = 'new';
+    const mm = document.getElementById('minimap');
+    const tog = document.getElementById('minimapToggle');
+    mm.classList.remove('old', 'new', 'collapsed');
+    tog.classList.remove('hidden');
+    if (minimapMode === 'none') {
+      mm.classList.add('hidden');
+      tog.classList.add('hidden');
+      return;
     }
+    mm.classList.add(minimapMode);
+    if (minimapMode === 'new') {
+      if (numWords > 64) {
+        mm.classList.add('collapsed');
+        tog.textContent = 'Map';
+      } else {
+        mm.classList.remove('collapsed');
+        tog.textContent = 'Hide Map';
+      }
+    } else {
+      // old style: always visible, no toggle
+      mm.classList.remove('collapsed');
+      tog.classList.add('hidden');
+    }
+    buildMinimap();
     renderMinimap();
   }, 0);
   selectWord(0);
