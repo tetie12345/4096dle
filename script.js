@@ -429,7 +429,18 @@ function selectWord(w) {
         renderBoard(idx);
       }
     }
-    boardEls[w].scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+    // Repeatedly re-scroll until layout (board heights) stabilizes
+    let _stabRemaining = 8;
+    function _stab() {
+      if (_stabRemaining <= 0) return;
+      if (boardEls[w]) {
+        boardEls[w].scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' });
+      }
+      updateVisibleBoards();
+      _stabRemaining--;
+      if (_stabRemaining > 0) setTimeout(_stab, 150);
+    }
+    _stab();
     setTimeout(updateVisibleBoards, 250);
   }
 }
