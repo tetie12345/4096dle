@@ -506,7 +506,7 @@ function newGame() {
     else minimapMode = 'new';
     const mm = document.getElementById('minimap');
     const tog = document.getElementById('minimapToggle');
-    mm.classList.remove('old', 'new', 'collapsed');
+    mm.classList.remove('old', 'new', 'collapsed', 'hidden');
     tog.classList.remove('hidden');
     if (minimapMode === 'none') {
       mm.classList.add('hidden');
@@ -523,9 +523,10 @@ function newGame() {
         tog.textContent = 'Hide Map';
       }
     } else {
-      // old style: always visible, no toggle
+      // old style: visible with toggle
       mm.classList.remove('collapsed');
-      tog.classList.add('hidden');
+      tog.classList.remove('hidden');
+      tog.textContent = 'Hide Map';
     }
     buildMinimap();
     renderMinimap();
