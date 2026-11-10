@@ -279,6 +279,9 @@ function selectWord(w) {
   if (fl) fl.textContent = 'Board ' + (w + 1);
   renderKeyboard();
   renderMinimap();
+  if (boardEls[w]) {
+    boardEls[w].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }
 }
 
 function renderKeyboard() {
