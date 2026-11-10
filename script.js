@@ -474,7 +474,7 @@ function startMode(n) {
   n = Math.max(1, Math.min(4096, parseInt(n) || 1));
   numWords = n;
   ROWS = n + 5;
-  const size = n <= 4 ? 46 : (n <= 16 ? 34 : (n <= 64 ? 24 : (n <= 256 ? 18 : 12)));
+  const size = n <= 4 ? 46 : (n <= 16 ? 34 : (n <= 64 ? 28 : (n <= 256 ? 22 : 16)));
   document.documentElement.style.setProperty('--tile-size', size + 'px');
   document.documentElement.style.setProperty('--rows', ROWS);
   modeSelect.classList.add('hidden');
