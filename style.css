@@ -165,17 +165,22 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
 .minimap.new {
   position: fixed; top: 5vh; left: 5vw; z-index: 101;
   display: grid; gap: 4px; padding: 10px; background: var(--panel); border-radius: 10px;
-  max-width: 90vw; max-height: 90vh; overflow: auto;
+  max-width: 90vw; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55); border: 1px solid var(--border);
 }
 .minimap.collapsed, .minimap.hidden { display: none; }
-.minimap.old .minimap-sq { width: 10px; height: 10px; border-radius: 2px; }
-.minimap.new .minimap-sq { width: 24px; height: 24px; border-radius: 4px; }
-.minimap-sq { background: var(--absent); cursor: pointer; }
-.minimap-sq:hover { background: var(--border-strong); }
+.minimap.old .minimap-sq { width: 12px; height: 12px; border-radius: 3px; }
+.minimap.new .minimap-sq { width: 24px; height: 24px; border-radius: 5px; }
+.minimap-sq {
+  background: var(--absent); cursor: pointer;
+  transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
+}
+.minimap-sq:hover { background: var(--border-strong); transform: scale(1.35); box-shadow: 0 0 0 1px var(--accent); }
+.minimap-sq:active { transform: scale(0.85); }
 .minimap-sq.solved { background: var(--correct); }
 .minimap-sq.solvable { background: var(--present); }
-.minimap-sq.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+.minimap-sq.selected { box-shadow: 0 0 0 2px var(--accent); background: var(--accent); }
+.minimap-sq.selected:hover { background: var(--accent-hover); }
 
 .message {
   position: fixed; top: 12%; left: 50%; transform: translateX(-50%);
@@ -229,9 +234,13 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   .hud-btn { padding: 5px 10px; font-size: 0.72rem; }
   .hint { font-size: 0.62rem; }
 
-  .minimap.old { max-width: 150px; left: 6px; bottom: calc(var(--kb-h) + 10px); }
-  .minimap.new { top: 1vh; left: 1vw; max-width: 97vw; max-height: 70vh; }
-  .minimap.new .minimap-sq { width: 14px; height: 14px; }
+  .minimap.old { max-width: calc(100vw - 20px); left: 10px; bottom: calc(var(--kb-h) + 10px); padding: 8px; gap: 3px; }
+  .minimap.old .minimap-sq { width: 13px; height: 13px; }
+  .minimap.new {
+    top: 2vh; left: 50%; transform: translateX(-50%);
+    width: calc(100vw - 16px); max-width: none; max-height: 76vh; padding: 8px; gap: 3px;
+  }
+  .minimap.new .minimap-sq { width: 13px; height: 13px; border-radius: 3px; }
 
   .message { font-size: 0.8rem; padding: 6px 12px; }
   .actions { gap: 6px; }

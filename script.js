@@ -398,19 +398,28 @@ function scoreGuess(guess, answer) {
 function buildMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
-  const sqSize = minimapMode === 'old' ? 10 : 24;
-  const gap = minimapMode === 'old' ? 2 : 4;
+  const mobile = window.innerWidth <= 600;
+  const sqSize = minimapMode === 'old' ? (mobile ? 13 : 12) : (mobile ? 13 : 24);
+  const gap = minimapMode === 'old' ? (mobile ? 3 : 2) : (mobile ? 3 : 4);
+  const pad = mobile ? 16 : 20;
   let cols;
   if (minimapMode === 'old') {
     cols = Math.ceil(Math.sqrt(numWords));
-    // cap to container width
-    const maxCols = Math.floor(260 / (sqSize + gap));
+    // cap to container width (small screens: nearly full width)
+    const maxW = mobile ? window.innerWidth - 20 : 260;
+    const maxCols = Math.max(1, Math.floor((maxW - pad) / (sqSize + gap)));
     if (cols > maxCols) cols = maxCols;
   } else {
-    const availW = Math.floor(window.innerWidth * 0.9);
-    cols = Math.max(1, Math.min(numWords, Math.floor(availW / (sqSize + gap))));
+    // fit the grid exactly inside the available width — no horizontal scrolling
+    const availW = mobile ? window.innerWidth - 16 : window.innerWidth * 0.9;
+    cols = Math.max(1, Math.min(numWords, Math.floor((availW - pad) / (sqSize + gap))));
   }
   mm.style.gridTemplateColumns = `repeat(${cols}, ${sqSize}px)`;
+  // pin the container width to the grid so it never overflows
+  mm.style.width = Math.min(
+    mobile ? window.innerWidth - 16 : window.innerWidth * 0.9,
+    cols * (sqSize + gap) - gap + pad
+  ) + 'px';
   mm.innerHTML = '';
   for (let w = 0; w < numWords; w++) {
     const sq = document.createElement('div');
@@ -604,7 +613,10 @@ function updateKbHeight() {
 let _resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(applyTileSize, 120);
+  _resizeTimer = setTimeout(() => {
+    applyTileSize();
+    if (minimapMode !== 'none' && boardEls.length) buildMinimap();
+  }, 120);
 });
 
 function startMode(n) {
