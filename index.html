@@ -46,11 +46,14 @@
   </div>
 
   <div id="game" class="game hidden">
+    <div class="hud">
+      <span class="hud-board" id="hudBoard">Board 1</span>
+      <span class="hud-stats" id="hudStats"></span>
+      <button id="minimapToggle" class="hud-btn hidden">Map</button>
+    </div>
     <div id="board" class="board"></div>
-    <div class="status" id="status"></div>
     <div class="hint">Click a board to view its keyboard colors</div>
     <div id="keyboard" class="keyboard"></div>
-  <div class="games-left" id="gamesLeft">Games left: 0</div>
     <div id="message" class="message"></div>
     <div class="actions">
       <button id="newGame" class="btn">New Game</button>
@@ -59,9 +62,7 @@
     </div>
   </div>
 </div>
-<div class="board-label-float hidden" id="boardLabelFloat">Board 1</div>
 <div class="minimap hidden" id="minimap"></div>
-<button class="minimap-toggle hidden" id="minimapToggle">Hide Map</button>
 <script src="words.js"></script>
 <script src="script.js"></script>
 </body>

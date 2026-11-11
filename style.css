@@ -116,47 +116,49 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
 .keyboard.hidden-kb { display: none; }
 .kb-row { display: flex; gap: 5px; }
 .key {
-  min-width: 34px; height: 48px; padding: 0 4px;
-  background: var(--absent); border: none; border-radius: 5px;
-  color: var(--text); font-weight: 700; font-size: 0.95rem;
+  min-width: 40px; height: 52px; padding: 0 5px;
+  background: var(--absent); border: none; border-radius: 6px;
+  color: var(--text); font-weight: 700; font-size: 1.05rem;
   cursor: pointer; text-transform: uppercase;
   transition: background 0.1s;
 }
 .key:hover { background: var(--border-strong); }
-.key.wide { min-width: 54px; font-size: 0.75rem; }
+.key.wide { min-width: 62px; font-size: 0.85rem; }
 .key.correct { background: var(--correct); }
 .key.present { background: var(--present); }
 .key.absent { background: var(--absent); color: #6d7688; }
 
-/* ---- floating UI ---- */
-.status { display: flex; gap: 12px; justify-content: center; margin: 8px 0; font-size: 0.95rem; color: var(--text); flex-wrap: wrap; }
-.status span { background: var(--panel); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); }
-.status .extra { color: var(--accent-hover); }
+/* ---- HUD (top bar) ---- */
+.hud {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  justify-content: center; margin: 4px 0 14px;
+  position: sticky; top: 0; z-index: 50;
+  padding: 8px 0; background: linear-gradient(var(--bg) 75%, transparent);
+}
+.hud-board {
+  background: var(--accent); color: #fff; font-weight: 800;
+  padding: 6px 16px; border-radius: 8px; font-size: 0.9rem;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.15);
+}
+.hud-stats { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.hud-stats span {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 5px 12px; display: inline-flex; gap: 6px; align-items: baseline;
+}
+.hud-stats b { color: var(--text); font-size: 1rem; }
+.hud-stats .extra b { color: var(--accent-hover); }
+.hud-btn {
+  margin-left: auto; background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.hud-btn:hover { border-color: var(--accent); background: var(--panel-2); }
+.hud-btn.hidden { display: none; }
 .hint { color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; }
 
-.games-left {
-  position: fixed; bottom: calc(var(--kb-h) + 54px); right: 10px;
-  z-index: 100; background: var(--panel); color: var(--text);
-  padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
-  display: flex; gap: 12px; border: 1px solid var(--border);
-}
-.games-left.hidden { display: none; }
-.board-label-float.hidden { display: none; }
-.board-label-float {
-  position: fixed; bottom: calc(var(--kb-h) + 14px); right: 10px; z-index: 101;
-  background: var(--accent); color: #fff; padding: 5px 12px; border-radius: 8px;
-  font-size: 0.85rem; font-weight: 700;
-}
-.minimap-toggle {
-  position: fixed; bottom: calc(var(--kb-h) + 14px); left: 10px; z-index: 102;
-  background: var(--panel); color: var(--text); border: 1px solid var(--border);
-  border-radius: 8px; padding: 5px 10px; font-size: 0.78rem; cursor: pointer;
-}
-.minimap-toggle:hover { border-color: var(--accent); }
-.minimap-toggle.hidden { display: none; }
-
 .minimap.old {
-  position: fixed; bottom: calc(var(--kb-h) + 54px); left: 10px; z-index: 101;
+  position: fixed; bottom: calc(var(--kb-h) + 14px); left: 10px; z-index: 101;
   display: grid; gap: 2px; padding: 6px; background: var(--panel); border-radius: 8px;
   max-width: 260px; border: 1px solid var(--border);
 }
@@ -214,19 +216,20 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   .word-board { padding: 4px; border-radius: 8px; min-width: calc(5 * var(--tile-size) + 18px); }
   .tile { border-radius: 3px; }
 
-  .keyboard { width: min(calc(100vw - 12px), 520px); padding: 5px; gap: 4px; }
-  .kb-row { gap: 3px; width: 100%; }
-  .key { flex: 1 1 0; min-width: 0; height: clamp(30px, 6.5vh, 44px); font-size: clamp(0.65rem, 3.4vw, 0.95rem); padding: 0; }
-  .key.wide { flex: 1.6 1 0; min-width: 0; font-size: clamp(0.55rem, 2.6vw, 0.75rem); }
+  .keyboard { width: min(calc(100vw - 12px), 560px); padding: 6px; gap: 5px; }
+  .kb-row { gap: 4px; width: 100%; }
+  .key { flex: 1 1 0; min-width: 0; height: clamp(40px, 8vh, 54px); font-size: clamp(0.8rem, 4.2vw, 1.05rem); padding: 0; }
+  .key.wide { flex: 1.7 1 0; min-width: 0; font-size: clamp(0.62rem, 3vw, 0.85rem); }
 
-  .status { gap: 4px; font-size: 0.72rem; }
-  .status span { padding: 3px 6px; }
+  .hud { gap: 6px; margin: 2px 0 10px; padding: 6px 0; }
+  .hud-board { padding: 5px 12px; font-size: 0.78rem; }
+  .hud-stats { gap: 5px; font-size: 0.7rem; }
+  .hud-stats span { padding: 4px 8px; }
+  .hud-stats b { font-size: 0.85rem; }
+  .hud-btn { padding: 5px 10px; font-size: 0.72rem; }
   .hint { font-size: 0.62rem; }
 
-  .games-left { right: 6px; font-size: 0.66rem; padding: 3px 7px; gap: 7px; bottom: calc(var(--kb-h) + 44px); }
-  .board-label-float { right: 6px; font-size: 0.68rem; padding: 3px 8px; bottom: calc(var(--kb-h) + 8px); }
-  .minimap-toggle { left: 6px; font-size: 0.66rem; padding: 3px 7px; bottom: calc(var(--kb-h) + 8px); }
-  .minimap.old { max-width: 150px; left: 6px; bottom: calc(var(--kb-h) + 44px); }
+  .minimap.old { max-width: 150px; left: 6px; bottom: calc(var(--kb-h) + 10px); }
   .minimap.new { top: 1vh; left: 1vw; max-width: 97vw; max-height: 70vh; }
   .minimap.new .minimap-sq { width: 14px; height: 14px; }
 

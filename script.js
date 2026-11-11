@@ -446,7 +446,7 @@ function selectWord(w) {
   document.querySelectorAll('.word-board').forEach((wb, idx) => {
     wb.classList.toggle('selected', idx === w);
   });
-  const fl = document.getElementById('boardLabelFloat');
+  const fl = document.getElementById('hudBoard');
   if (fl) fl.textContent = 'Board ' + (w + 1);
   renderKeyboard();
   renderMinimap();
@@ -497,10 +497,11 @@ function updateStatus(justSubmitted) {
   const unsolved = locked.filter(x => !x).length;
   const guessesLeft = ROWS - currentRow - (justSubmitted ? 1 : 0);
   const extra = Math.max(0, guessesLeft - unsolved);
-  const statusEl = document.getElementById('status');
-  statusEl.innerHTML = '<span>Unsolved: ' + unsolved + '</span><span>Guesses left: ' + guessesLeft + '</span><span class="extra">Extra: ' + extra + '</span>';
-  const gl = document.getElementById('gamesLeft');
-  if (gl) gl.innerHTML = '<span>Games: ' + unsolved + '</span><span>Guesses: ' + guessesLeft + '</span><span>Free: ' + extra + '</span>';
+  const statsEl = document.getElementById('hudStats');
+  if (statsEl) statsEl.innerHTML =
+    '<span>Unsolved <b>' + unsolved + '</b></span>' +
+    '<span>Guesses <b>' + guessesLeft + '</b></span>' +
+    '<span class="extra">Extra <b>' + extra + '</b></span>';
 }
 function showMessage(msg) {
   messageEl.textContent = msg;
@@ -538,7 +539,7 @@ function newGame() {
     const tog = document.getElementById('minimapToggle');
     mm.classList.remove('old', 'new', 'collapsed', 'hidden');
     tog.classList.remove('hidden');
-    document.getElementById('boardLabelFloat').classList.remove('hidden');
+    tog.textContent = 'Hide Map';
     if (minimapMode === 'none') {
       mm.classList.add('hidden');
       tog.classList.add('hidden');
@@ -574,11 +575,8 @@ function showMenu() {
   gameEl.classList.add('hidden');
   modeSelect.classList.remove('hidden');
   // hide floating game UI while in the menu
-  document.getElementById('boardLabelFloat').classList.add('hidden');
   document.getElementById('minimapToggle').classList.add('hidden');
   document.getElementById('minimap').classList.add('hidden');
-  const gl = document.getElementById('gamesLeft');
-  if (gl) gl.classList.add('hidden');
 }
 
 function baseTileSize(n) {
@@ -632,14 +630,11 @@ document.getElementById('menuBtn').addEventListener('click', showMenu);
 document.getElementById('toggleKb').addEventListener('click', () => {
   const kb = document.getElementById('keyboard');
   const btn = document.getElementById('toggleKb');
-  const gl = document.getElementById('gamesLeft');
   if (kb.classList.contains('hidden-kb')) {
     kb.classList.remove('hidden-kb');
-    if (gl) gl.classList.remove('hidden');
     btn.textContent = 'Hide KB';
   } else {
     kb.classList.add('hidden-kb');
-    if (gl) gl.classList.add('hidden');
     btn.textContent = 'Show KB';
   }
   updateKbHeight();
