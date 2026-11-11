@@ -18,7 +18,7 @@
   --kb-bottom: 8px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
 .hidden { display: none !important; }
 html { scroll-behavior: auto; }
 body {
@@ -77,9 +77,10 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   cursor: pointer; background: var(--panel);
   min-width: calc(5 * var(--tile-size) + 36px);
   transition: border-color 0.12s, background 0.12s;
-  /* skip layout/paint for boards far offscreen (huge modes) */
+  /* skip layout/paint for boards far offscreen (huge modes);
+     intrinsic size is kept accurate from JS (updateBoardMinHeights) so
+     appended rows still grow the box while content is skipped */
   content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
 }
 .word-board.locked.selected { border-color: var(--accent); }
 @media (hover: hover) {

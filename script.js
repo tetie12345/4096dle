@@ -164,11 +164,13 @@ function updateBoardMinHeights() {
   const w = 5 * tileSize + 4 * 4 + 16 + 4;
   if (h === _lastMinH && w === _lastMinW) return; // nothing changed — skip 4096 style writes
   _lastMinH = h; _lastMinW = w;
+  const cis = w + 'px ' + h + 'px';
   for (let w2 = 0; w2 < numWords; w2++) {
     const wb = boardEls[w2];
     if (wb) {
       wb.style.minHeight = h + 'px';
       wb.style.minWidth = w + 'px';
+      wb.style.containIntrinsicSize = cis;
     }
   }
 }
@@ -585,6 +587,8 @@ function newGame() {
   visibleBoards = new Set();
   minimapState = [];
   initBoard();
+  _lastMinH = -1; _lastMinW = -1;
+  updateBoardMinHeights();
   initKeyboard();
   keyboardEl.querySelectorAll('.key').forEach(k => {
     k.classList.remove('correct','present','absent');
