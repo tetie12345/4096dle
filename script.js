@@ -571,6 +571,7 @@ function newGame() {
     }
     buildMinimap();
     renderMinimap();
+    syncMapClose();
   }, 0);
   selectWord(0);
   updateStatus(false);
@@ -580,12 +581,21 @@ function newGame() {
     : `Guess ${numWords} words at once in ${ROWS} tries`;
 }
 
+function syncMapClose() {
+  const mm = document.getElementById('minimap');
+  const mc = document.getElementById('mapClose');
+  if (!mm || !mc) return;
+  const open = !mm.classList.contains('hidden') && !mm.classList.contains('collapsed')
+    && !gameEl.classList.contains('hidden');
+  mc.classList.toggle('hidden', !open);
+}
 function showMenu() {
   gameEl.classList.add('hidden');
   modeSelect.classList.remove('hidden');
   // hide floating game UI while in the menu
   document.getElementById('minimapToggle').classList.add('hidden');
   document.getElementById('minimap').classList.add('hidden');
+  syncMapClose();
 }
 
 function baseTileSize(n) {
@@ -651,6 +661,12 @@ document.getElementById('toggleKb').addEventListener('click', () => {
   }
   updateKbHeight();
 });
+document.getElementById('mapClose').addEventListener('click', () => {
+  const mm = document.getElementById('minimap');
+  mm.classList.add('collapsed');
+  document.getElementById('minimapToggle').textContent = 'Map';
+  syncMapClose();
+});
 document.getElementById('minimapToggle').addEventListener('click', () => {
   const mm = document.getElementById('minimap');
   const btn = document.getElementById('minimapToggle');
@@ -662,6 +678,7 @@ document.getElementById('minimapToggle').addEventListener('click', () => {
     mm.classList.add('collapsed');
     btn.textContent = 'Map';
   }
+  syncMapClose();
 });
 
 let _scrollTimer = null;
