@@ -4,6 +4,7 @@ let numWords = 1;
 let selectedWord = 0;
 let keyStates = []; // keyStates[w] = { letter: state }
 let foundLetters = []; // foundLetters[w] = Set of found letters
+let answerLetters = []; // cached distinct letters per answer (perf: avoid Sets in render loop)
 let answers = [];
 let locked = []; // locked[w] = bool
 let currentRow = 0;
@@ -55,6 +56,7 @@ function pickAnswers() {
   locked = answers.map(() => false);
   keyStates = answers.map(() => ({}));
   foundLetters = answers.map(() => new Set());
+  answerLetters = answers.map(a => new Set(a.split('')));
   guesses = [];
   currentGuess = '';
   selectedWord = 0;
@@ -154,11 +156,14 @@ function clearBoard(w) {
   board[w] = [];
 }
 
+let _lastMinH = -1, _lastMinW = -1;
 function updateBoardMinHeights() {
   const tileSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tile-size')) || 46;
   const rows = Math.min(ROWS, (currentRow || 0) + 6);
   const h = rows * (tileSize + 4) + 40;
   const w = 5 * tileSize + 4 * 4 + 16 + 4;
+  if (h === _lastMinH && w === _lastMinW) return; // nothing changed — skip 4096 style writes
+  _lastMinH = h; _lastMinW = w;
   for (let w2 = 0; w2 < numWords; w2++) {
     const wb = boardEls[w2];
     if (wb) {
@@ -177,20 +182,45 @@ function updateRowVisibilityOne(w) {
   }
 }
 
+let _renderQueue = [];
+let _renderBudget = 12;
+let _drainScheduled = false;
+function scheduleRenderDrain() {
+  if (_drainScheduled) return;
+  _drainScheduled = true;
+  requestAnimationFrame(() => {
+    _drainScheduled = false;
+    _renderBudget = 12;
+    while (_renderQueue.length && _renderBudget > 0) {
+      const w = _renderQueue.shift();
+      _renderBudget--;
+      if (boardEls[w]) renderBoard(w);
+    }
+    if (_renderQueue.length) scheduleRenderDrain();
+  });
+}
 function updateVisibleBoards() {
   if (!boardEls.length) return;
   const vh = window.innerHeight;
   const margin = 600;
+  // read ALL rects first, then mutate — avoids layout thrashing mid-loop
+  const rects = new Array(numWords);
+  for (let w = 0; w < numWords; w++) {
+    rects[w] = boardEls[w] ? boardEls[w].getBoundingClientRect() : null;
+  }
   for (let w = 0; w < numWords; w++) {
     const wb = boardEls[w];
     if (!wb) continue;
-    const rect = wb.getBoundingClientRect();
+    const rect = rects[w];
+    if (!rect) continue;
     if (rect.top > vh + margin) break; // rest are below viewport
     const inView = rect.bottom > -margin && rect.top < vh + margin;
     if (inView) {
       if (!visibleBoards.has(w)) {
         visibleBoards.add(w);
-        renderBoard(w);
+        // render budget: at most 12 boards per pass, defer the rest to rAF
+        if (_renderBudget > 0) { _renderBudget--; renderBoard(w); }
+        else { _renderQueue.push(w); scheduleRenderDrain(); }
       }
     } else {
       if (rect.bottom < -margin) {
@@ -420,15 +450,27 @@ function buildMinimap() {
     mobile ? window.innerWidth - 16 : window.innerWidth * 0.9,
     cols * (sqSize + gap) - gap + pad
   ) + 'px';
-  mm.innerHTML = '';
+  // one delegated listener + fragment instead of 4096 closures — much faster init
+  if (!mm._delegated) {
+    mm.addEventListener('click', e => {
+      const sq = e.target.closest('.minimap-sq');
+      if (sq) selectWord(parseInt(sq.dataset.w));
+    });
+    mm._delegated = true;
+  }
+  const frag = document.createDocumentFragment();
   for (let w = 0; w < numWords; w++) {
     const sq = document.createElement('div');
     sq.className = 'minimap-sq';
+    sq.dataset.w = w;
     sq.title = 'Board ' + (w + 1);
-    sq.addEventListener('click', () => selectWord(w));
-    mm.appendChild(sq);
+    frag.appendChild(sq);
   }
+  mm.replaceChildren(frag);
+  minimapState = [];
+  _mmSelected = -1;
 }
+let _mmSelected = -1;
 function renderMinimap() {
   const mm = document.getElementById('minimap');
   if (!mm) return;
@@ -436,18 +478,27 @@ function renderMinimap() {
   if (mm.classList.contains('collapsed')) return;
   const sqs = mm.children;
   if (!sqs.length) return;
+  // only touch squares whose state changed (perf: 4096 squares on big modes)
   for (let w = 0; w < numWords; w++) {
     const sq = sqs[w];
     if (!sq) continue;
-    sq.classList.remove('solved', 'solvable', 'selected');
-    if (locked[w]) sq.classList.add('solved');
+    let st = '';
+    if (locked[w]) st = 'solved';
     else {
-      const distinct = new Set(answers[w].split(''));
       let solvable = true;
-      for (const l of distinct) { if (!foundLetters[w].has(l)) { solvable = false; break; } }
-      if (solvable) sq.classList.add('solvable');
+      for (const l of answerLetters[w]) { if (!foundLetters[w].has(l)) { solvable = false; break; } }
+      if (solvable) st = 'solvable';
     }
-    if (w === selectedWord) sq.classList.add('selected');
+    if (minimapState[w] !== st) {
+      minimapState[w] = st;
+      sq.className = 'minimap-sq' + (st ? ' ' + st : '') + (w === selectedWord ? ' selected' : '');
+    }
+  }
+  // selection: toggle only the previous and current squares
+  if (_mmSelected !== selectedWord) {
+    if (_mmSelected >= 0 && sqs[_mmSelected]) sqs[_mmSelected].classList.remove('selected');
+    if (sqs[selectedWord]) sqs[selectedWord].classList.add('selected');
+    _mmSelected = selectedWord;
   }
 }
 function selectWord(w) {
@@ -473,7 +524,7 @@ function selectWord(w) {
       }
     }
     // Repeatedly re-scroll until layout (board heights) stabilizes
-    let _stabRemaining = 8;
+    let _stabRemaining = 4;
     function _stab() {
       if (_stabRemaining <= 0) return;
       if (boardEls[w]) {
@@ -481,7 +532,7 @@ function selectWord(w) {
       }
       updateVisibleBoards();
       _stabRemaining--;
-      if (_stabRemaining > 0) setTimeout(_stab, 150);
+      if (_stabRemaining > 0) setTimeout(_stab, 120);
     }
     _stab();
     setTimeout(updateVisibleBoards, 250);
@@ -697,7 +748,7 @@ window.addEventListener('scroll', () => {
     _scrollTimer = null;
     updateVisibleBoards();
   }, 150);
-}, true);
+}, { capture: true, passive: true });
 
 document.addEventListener('keydown', e => {
   if (modeSelect && !modeSelect.classList.contains('hidden')) return;

@@ -77,8 +77,14 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   cursor: pointer; background: var(--panel);
   min-width: calc(5 * var(--tile-size) + 36px);
   transition: border-color 0.12s, background 0.12s;
+  /* skip layout/paint for boards far offscreen (huge modes) */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
 }
-.word-board:hover { border-color: var(--border-strong); }
+.word-board.locked.selected { border-color: var(--accent); }
+@media (hover: hover) {
+  .word-board:hover { border-color: var(--border-strong); }
+}
 /* flat selection highlight — no glow */
 .word-board.selected { border-color: var(--accent); background: var(--accent-soft); }
 .word-board.locked { opacity: 0.65; pointer-events: none; border-color: var(--correct); }
@@ -133,7 +139,7 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   justify-content: center; margin: 4px 0 14px;
   position: sticky; top: 0; z-index: 50;
-  padding: 8px 0; background: linear-gradient(var(--bg) 75%, transparent);
+  padding: 8px 0; background: var(--bg);
 }
 .hud-board {
   background: var(--accent); color: #fff; font-weight: 800;
@@ -175,12 +181,14 @@ header h1 { font-size: 2.2rem; letter-spacing: 0.3rem; margin-bottom: 4px; color
   background: var(--absent); cursor: pointer;
   transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
 }
-.minimap-sq:hover { background: var(--border-strong); transform: scale(1.35); box-shadow: 0 0 0 1px var(--accent); }
 .minimap-sq:active { transform: scale(0.85); }
+@media (hover: hover) {
+  .minimap-sq:hover { background: var(--border-strong); transform: scale(1.35); box-shadow: 0 0 0 1px var(--accent); }
+  .minimap-sq.selected:hover { background: var(--accent-hover); }
+}
 .minimap-sq.solved { background: var(--correct); }
 .minimap-sq.solvable { background: var(--present); }
 .minimap-sq.selected { box-shadow: 0 0 0 2px var(--accent); background: var(--accent); }
-.minimap-sq.selected:hover { background: var(--accent-hover); }
 /* dedicated map close button — fixed above the overlay, never obstructed */
 .map-close {
   position: fixed; top: 8px; right: 8px; z-index: 105;
