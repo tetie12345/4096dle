@@ -538,6 +538,7 @@ function newGame() {
     const tog = document.getElementById('minimapToggle');
     mm.classList.remove('old', 'new', 'collapsed', 'hidden');
     tog.classList.remove('hidden');
+    document.getElementById('boardLabelFloat').classList.remove('hidden');
     if (minimapMode === 'none') {
       mm.classList.add('hidden');
       tog.classList.add('hidden');
@@ -563,23 +564,56 @@ function newGame() {
   }, 0);
   selectWord(0);
   updateStatus(false);
+  updateKbHeight();
   subtitleEl.textContent = numWords === 1
-    ? 'Guess the word in 6 tries'
-    : `Guess ${numWords} words at once in 6 tries`;
+    ? `Guess the word in ${ROWS} tries`
+    : `Guess ${numWords} words at once in ${ROWS} tries`;
 }
 
 function showMenu() {
   gameEl.classList.add('hidden');
   modeSelect.classList.remove('hidden');
+  // hide floating game UI while in the menu
+  document.getElementById('boardLabelFloat').classList.add('hidden');
+  document.getElementById('minimapToggle').classList.add('hidden');
+  document.getElementById('minimap').classList.add('hidden');
+  const gl = document.getElementById('gamesLeft');
+  if (gl) gl.classList.add('hidden');
 }
+
+function baseTileSize(n) {
+  return n <= 4 ? 52 : (n <= 16 ? 40 : (n <= 64 ? 34 : (n <= 256 ? 28 : 20)));
+}
+
+// Viewport-aware tile size: never wider than the screen, so boards fit on phones.
+function applyTileSize() {
+  const base = baseTileSize(numWords);
+  // word-board: padding 2*8 + border 2*2 = 20 on desktop (8 on mobile), grid gaps 4*4 = 16
+  const chrome = window.innerWidth <= 600 ? 18 : 36;
+  const avail = window.innerWidth - 24;
+  const size = Math.max(16, Math.min(base, Math.floor((avail - chrome) / 5)));
+  document.documentElement.style.setProperty('--tile-size', size + 'px');
+  updateBoardMinHeights();
+  updateKbHeight();
+}
+
+function updateKbHeight() {
+  const kb = document.getElementById('keyboard');
+  const h = kb && !kb.classList.contains('hidden-kb') ? kb.offsetHeight + 8 : 0;
+  document.documentElement.style.setProperty('--kb-h', h + 'px');
+}
+
+let _resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(applyTileSize, 120);
+});
 
 function startMode(n) {
   n = Math.max(1, Math.min(4096, parseInt(n) || 1));
   numWords = n;
   ROWS = n + extraGuesses(n);
-  const size = n <= 4 ? 52 : (n <= 16 ? 40 : (n <= 64 ? 34 : (n <= 256 ? 28 : 20)));
-  document.documentElement.style.setProperty('--tile-size', size + 'px');
-  document.documentElement.style.setProperty('--rows', ROWS);
+  applyTileSize();
   modeSelect.classList.add('hidden');
   gameEl.classList.remove('hidden');
   newGame();
@@ -608,6 +642,7 @@ document.getElementById('toggleKb').addEventListener('click', () => {
     if (gl) gl.classList.add('hidden');
     btn.textContent = 'Show KB';
   }
+  updateKbHeight();
 });
 document.getElementById('minimapToggle').addEventListener('click', () => {
   const mm = document.getElementById('minimap');
