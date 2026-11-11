@@ -293,6 +293,7 @@ function handleKey(key) {
         if (tile) { tile.textContent = ''; tile.classList.remove('filled'); }
       }
     }
+    scheduleSave();
     return;
   }
   if (key === 'ENTER') {
@@ -309,7 +310,37 @@ function handleKey(key) {
       if (tile) { tile.textContent = key; tile.classList.add('filled'); }
     }
     currentCol++;
+    scheduleSave();
   }
+}
+
+// Apply a guess to one board's persistent state (keyStates, foundLetters, locked).
+// Returns the per-position result. Shared by live play and save-file replay.
+function applyGuessToState(guess, w) {
+  const result = scoreGuess(guess, answers[w]);
+  const bestKeyState = {};
+  for (let c = 0; c < COLS; c++) {
+    const letter = guess[c];
+    const cur = bestKeyState[letter];
+    const priority = { correct: 3, present: 2, absent: 1 };
+    if (!cur || (priority[result[c]] || 0) > (priority[cur] || 0)) {
+      bestKeyState[letter] = result[c];
+    }
+  }
+  const ks = keyStates[w];
+  for (const letter in bestKeyState) {
+    const priority = { correct: 3, present: 2, absent: 1 };
+    const cur = ks[letter];
+    if (!cur || (priority[bestKeyState[letter]] || 0) > (priority[cur] || 0)) {
+      ks[letter] = bestKeyState[letter];
+    }
+  }
+  for (let c = 0; c < COLS; c++) {
+    if (result[c] === 'correct' || result[c] === 'present') {
+      foundLetters[w].add(guess[c]);
+    }
+  }
+  return result;
 }
 
 function submitGuess() {
@@ -333,31 +364,7 @@ function submitGuess() {
   const _oldHeight = document.documentElement.scrollHeight;
   for (let w = 0; w < numWords; w++) {
     if (locked[w]) continue;
-    const result = scoreGuess(guess, answers[w]);
-    const bestKeyState = {};
-    for (let c = 0; c < COLS; c++) {
-      const letter = guess[c];
-      const cur = bestKeyState[letter];
-      const priority = { correct: 3, present: 2, absent: 1 };
-      if (!cur || (priority[result[c]] || 0) > (priority[cur] || 0)) {
-        bestKeyState[letter] = result[c];
-      }
-    }
-    // merge into keyStates[w]
-    const ks = keyStates[w];
-    for (const letter in bestKeyState) {
-      const priority = { correct: 3, present: 2, absent: 1 };
-      const cur = ks[letter];
-      if (!cur || (priority[bestKeyState[letter]] || 0) > (priority[cur] || 0)) {
-        ks[letter] = bestKeyState[letter];
-      }
-    }
-    // track found letters for minimap
-    for (let c = 0; c < COLS; c++) {
-      if (result[c] === 'correct' || result[c] === 'present') {
-        foundLetters[w].add(guess[c]);
-      }
-    }
+    const result = applyGuessToState(guess, w);
     // update DOM tiles for visible boards (in place, no full rebuild)
     if (board[w] && board[w][currentRow]) {
       for (let c = 0; c < COLS; c++) {
@@ -385,6 +392,7 @@ function submitGuess() {
     showMessage('You win! Answers: ' + answers.join(', '));
     updateStatus(true);
     gameOver = true;
+    saveGame();
     return;
   }
   currentRow++;
@@ -403,6 +411,7 @@ function submitGuess() {
     showMessage('Game over. Answers: ' + answers.join(', '));
     gameOver = true;
   }
+  scheduleSave();
 }
 
 function scoreGuess(guess, answer) {
@@ -538,6 +547,7 @@ function selectWord(w) {
     }
     _stab();
     setTimeout(updateVisibleBoards, 250);
+    scheduleSave();
   }
 }
 
@@ -595,38 +605,7 @@ function newGame() {
     delete k.dataset.state;
   });
   setTimeout(() => {
-    // Determine minimap mode
-    if (numWords < 16) minimapMode = 'none';
-    else if (numWords < 256) minimapMode = 'old';
-    else minimapMode = 'new';
-    const mm = document.getElementById('minimap');
-    const tog = document.getElementById('minimapToggle');
-    mm.classList.remove('old', 'new', 'collapsed', 'hidden');
-    tog.classList.remove('hidden');
-    tog.textContent = 'Hide Map';
-    if (minimapMode === 'none') {
-      mm.classList.add('hidden');
-      tog.classList.add('hidden');
-      return;
-    }
-    mm.classList.add(minimapMode);
-    if (minimapMode === 'new') {
-      if (numWords > 64) {
-        mm.classList.add('collapsed');
-        tog.textContent = 'Map';
-      } else {
-        mm.classList.remove('collapsed');
-        tog.textContent = 'Hide Map';
-      }
-    } else {
-      // old style: visible with toggle
-      mm.classList.remove('collapsed');
-      tog.classList.remove('hidden');
-      tog.textContent = 'Hide Map';
-    }
-    buildMinimap();
-    renderMinimap();
-    syncMapClose();
+    setupMinimapUI();
   }, 0);
   selectWord(0);
   updateStatus(false);
@@ -634,6 +613,43 @@ function newGame() {
   subtitleEl.textContent = numWords === 1
     ? `Guess the word in ${ROWS} tries`
     : `Guess ${numWords} words at once in ${ROWS} tries`;
+  saveGame();
+}
+
+function setupMinimapUI() {
+  // Determine minimap mode
+  if (numWords < 16) minimapMode = 'none';
+  else if (numWords < 256) minimapMode = 'old';
+  else minimapMode = 'new';
+  const mm = document.getElementById('minimap');
+  const tog = document.getElementById('minimapToggle');
+  mm.classList.remove('old', 'new', 'collapsed', 'hidden');
+  tog.classList.remove('hidden');
+  tog.textContent = 'Hide Map';
+  if (minimapMode === 'none') {
+    mm.classList.add('hidden');
+    tog.classList.add('hidden');
+    syncMapClose();
+    return;
+  }
+  mm.classList.add(minimapMode);
+  if (minimapMode === 'new') {
+    if (numWords > 64) {
+      mm.classList.add('collapsed');
+      tog.textContent = 'Map';
+    } else {
+      mm.classList.remove('collapsed');
+      tog.textContent = 'Hide Map';
+    }
+  } else {
+    // old style: visible with toggle
+    mm.classList.remove('collapsed');
+    tog.classList.remove('hidden');
+    tog.textContent = 'Hide Map';
+  }
+  buildMinimap();
+  renderMinimap();
+  syncMapClose();
 }
 
 function syncMapClose() {
@@ -644,6 +660,116 @@ function syncMapClose() {
     && !gameEl.classList.contains('hidden');
   mc.classList.toggle('hidden', !open);
 }
+
+/* ---------- persistence (localStorage) ---------- */
+const SAVE_KEY = 'wordle4096_save_v1';
+let _saveTimer = null;
+
+function saveGame() {
+  try {
+    if (gameOver || !answers.length) { localStorage.removeItem(SAVE_KEY); return; }
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v: 1, n: numWords, rows: ROWS, row: currentRow, col: currentCol,
+      g: currentGuess, sel: selectedWord,
+      ans: answers.join('|'), gs: guesses.join('|')
+    }));
+  } catch (e) { /* storage unavailable — keep playing */ }
+}
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveGame, 250);
+}
+function flushSave() {
+  if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; saveGame(); }
+}
+function loadSave() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    if (!s || s.v !== 1 || !s.n || typeof s.ans !== 'string' || !s.ans) return null;
+    const ans = s.ans.split('|');
+    if (ans.length !== s.n) return null;
+    return {
+      numWords: s.n, rows: s.rows || (s.n + extraGuesses(s.n)),
+      row: Math.max(0, s.row || 0), col: Math.max(0, s.col || 0), g: s.g || '',
+      sel: Math.min(s.sel || 0, s.n - 1),
+      answers: ans, guesses: (s.gs || '').split('|').filter(Boolean)
+    };
+  } catch (e) { return null; }
+}
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+function resumeGame() {
+  const s = loadSave();
+  if (!s) return;
+  numWords = s.numWords;
+  ROWS = s.rows;
+  answers = s.answers;
+  guesses = s.guesses;
+  currentRow = Math.min(s.row, ROWS);
+  currentCol = s.col;
+  currentGuess = s.g;
+  selectedWord = s.sel;
+  gameOver = false;
+  // rebuild derived state by replaying the guesses against each answer
+  locked = answers.map(a => guesses.includes(a));
+  keyStates = answers.map(() => ({}));
+  foundLetters = answers.map(() => new Set());
+  answerLetters = answers.map(a => new Set(a.split('')));
+  for (const g of guesses) {
+    for (let w = 0; w < numWords; w++) {
+      if (!locked[w]) applyGuessToState(g, w);
+    }
+  }
+  applyTileSize();
+  modeSelect.classList.add('hidden');
+  gameEl.classList.remove('hidden');
+  messageEl.textContent = '';
+  messageEl.classList.remove('show');
+  boardEl.innerHTML = '';
+  visibleBoards = new Set();
+  minimapState = [];
+  initBoard();
+  _lastMinH = -1; _lastMinW = -1;
+  updateBoardMinHeights();
+  initKeyboard();
+  keyboardEl.querySelectorAll('.key').forEach(k => {
+    k.classList.remove('correct', 'present', 'absent');
+    delete k.dataset.state;
+  });
+  setTimeout(() => { setupMinimapUI(); }, 0);
+  selectWord(selectedWord);
+  updateStatus(false);
+  updateKbHeight();
+  subtitleEl.textContent = numWords === 1
+    ? `Guess the word in ${ROWS} tries`
+    : `Guess ${numWords} words at once in ${ROWS} tries`;
+  renderKeyboard();
+  renderMinimap();
+  // finished games restore as done
+  if (locked.every(Boolean) || currentRow >= ROWS) {
+    gameOver = true;
+    subtitleEl.textContent = 'Answers: ' + answers.join(', ');
+    showMessage('Answers: ' + answers.join(', '));
+    updateStatus(true);
+  }
+  scheduleSave();
+}
+
+function updateResumeBtn() {
+  const btn = document.getElementById('resumeBtn');
+  if (!btn) return;
+  const s = loadSave();
+  if (s && s.answers.length) {
+    btn.classList.remove('hidden');
+    btn.textContent = 'Resume: ' + s.numWords + ' words, row ' + (s.row + 1);
+  } else {
+    btn.classList.add('hidden');
+  }
+}
+
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
+
 function showMenu() {
   gameEl.classList.add('hidden');
   modeSelect.classList.remove('hidden');
@@ -651,6 +777,7 @@ function showMenu() {
   document.getElementById('minimapToggle').classList.add('hidden');
   document.getElementById('minimap').classList.add('hidden');
   syncMapClose();
+  updateResumeBtn();
 }
 
 function baseTileSize(n) {
@@ -695,7 +822,7 @@ function startMode(n) {
   setTimeout(() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; }, 100);
 }
 
-document.querySelectorAll('.mode-btn').forEach(btn => {
+document.querySelectorAll('.mode-presets .mode-btn').forEach(btn => {
   btn.addEventListener('click', () => startMode(parseInt(btn.dataset.mode)));
 });
 document.getElementById('modeStart').addEventListener('click', () => {
@@ -704,6 +831,8 @@ document.getElementById('modeStart').addEventListener('click', () => {
 
 document.getElementById('newGame').addEventListener('click', newGame);
 document.getElementById('menuBtn').addEventListener('click', showMenu);
+document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+updateResumeBtn();
 document.getElementById('toggleKb').addEventListener('click', () => {
   const kb = document.getElementById('keyboard');
   const btn = document.getElementById('toggleKb');
